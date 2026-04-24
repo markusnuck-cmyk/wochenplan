@@ -417,6 +417,13 @@ async function graphGet(url) {
 }
 
 async function loadOneDriveFiles(folderId = null) {
+  if (!folderId) {
+    const search = await graphGet(`/me/drive/root/search(q='Jahrestabellen')?$top=10`);
+    if (search && search.value) {
+      const folder = search.value.find(i => i.folder && i.name === 'Jahrestabellen');
+      if (folder) folderId = folder.id;
+    }
+  }
   const endpoint = folderId
     ? `/me/drive/items/${folderId}/children`
     : `/me/drive/root/children`;
