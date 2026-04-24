@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wochenplan 2026 – Maler Müller</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --blue: #2f5496;
+    --blue-light: #4472c4;
+    --blue-pale: #d9e2f3;
+    --blue-thin: #b4c6e7;
+    --gold: #c8a84b;
+    --bg: #f0ede8;
+    --white: #ffffff;
+    --border: #d0ccc4;
+    --text: #1a1a18;
+    --muted: #888;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* HEADER */
+  #header { background: var(--blue); padding: 13px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #header h1 { color: #fff; font-size: 15px; font-weight: bold; letter-spacing: 1px; }
+  #header span { color: var(--blue-thin); font-size: 11px; margin-left: 14px; }
+  #btn-login { background: var(--gold); color: var(--text); border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
+  #btn-login.connected { background: var(--blue-light); color: #fff; }
+  #user-info { color: var(--blue-thin); font-size: 11px; margin-right: 10px; }
+
+  /* SETUP SCREEN */
+  #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px; }
+  .setup-card { background: #fff; border-radius: 6px; border: 1px solid var(--border); padding: 32px; max-width: 480px; width: 100%; }
+  .setup-card h2 { color: var(--blue); font-size: 18px; margin-bottom: 8px; }
+  .setup-card p { color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+  .setup-step { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; padding: 14px; background: var(--bg); border-radius: 4px; }
+  .step-num { background: var(--blue); color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; flex-shrink: 0; margin-top: 1px; }
+  .step-text strong { display: block; color: var(--text); margin-bottom: 3px; }
+  .step-text span { color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .setup-input { width: 100%; border: 1px solid var(--border); border-radius: 3px; padding: 9px 11px; font-size: 13px; font-family: inherit; outline: none; margin-top: 6px; }
+  .setup-input:focus { border-color: var(--blue); }
+  #btn-connect { width: 100%; background: var(--blue); color: #fff; border: none; padding: 12px; border-radius: 3px; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 20px; }
+  #btn-connect:hover { background: var(--blue-light); }
+  .note { background: #fff8e8; border: 1px solid #e8d090; border-radius: 4px; padding: 12px 14px; font-size: 12px; color: #7a5a10; margin-top: 16px; line-height: 1.5; }
+
+  /* FILE PICKER */
+  #file-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px; }
+  .file-card { background: #fff; border-radius: 6px; border: 1px solid var(--border); padding: 32px; max-width: 520px; width: 100%; }
+  .file-card h2 { color: var(--blue); font-size: 16px; margin-bottom: 16px; }
+  #file-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 3px; }
+  .file-item { padding: 10px 14px; border-bottom: 1px solid var(--bg); cursor: pointer; display: flex; align-items: center; gap: 10px; }
+  .file-item:hover { background: var(--blue-pale); }
+  .file-item:last-child { border-bottom: none; }
+  .file-icon { font-size: 18px; }
+  .file-name { font-weight: 500; }
+  .file-modified { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  #btn-refresh { background: none; border: 1px solid var(--border); padding: 7px 14px; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  #path-nav { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+
+  /* MAIN APP */
+  #app { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+  #app.visible { display: flex; }
+  #app-inner { display: flex; flex: 1; overflow: hidden; }
+
+  /* SIDEBAR */
+  #sidebar { width: 100px; background: #fff; border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; }
+  .kw-item { padding: 8px 10px; cursor: pointer; border-left: 3px solid transparent; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #777; border-bottom: 1px solid var(--bg); }
+  .kw-item.active { background: #eef2fb; border-left-color: var(--blue); color: var(--blue); font-weight: bold; }
+  .kw-item:hover:not(.active) { background: var(--bg); }
+  .kw-badge { background: var(--blue); color: #fff; border-radius: 8px; padding: 1px 5px; font-size: 10px; font-weight: bold; }
+
+  /* MAIN CONTENT */
+  #main { flex: 1; overflow-y: auto; padding: 18px 22px; }
+  #kw-header { padding-bottom: 12px; border-bottom: 2px solid var(--blue-pale); margin-bottom: 14px; }
+  #kw-title { font-size: 17px; font-weight: bold; color: var(--blue); }
+  #kw-datum { font-size: 13px; color: #777; margin-left: 12px; }
+  #kw-info { margin-left: 12px; color: var(--gold); font-weight: bold; font-size: 12px; }
+
+  /* TABS */
+  #tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .tab { background: none; border: none; padding: 6px 16px; cursor: pointer; color: #999; border-bottom: 2px solid transparent; font-size: 13px; font-family: inherit; margin-bottom: -1px; }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: bold; }
+
+  /* TABLE */
+  #entry-table { width: 100%; border-collapse: collapse; }
+  #entry-table thead tr { background: var(--blue-light); }
+  #entry-table th { color: #fff; padding: 7px 9px; font-weight: bold; font-size: 12px; text-align: left; }
+  #entry-table th:first-child, #entry-table th:nth-child(2) { text-align: center; }
+  #entry-table td { padding: 7px 9px; }
+  #entry-table tr.odd td { background: var(--blue-pale); }
+  #entry-table tr.even td { background: #fff; }
+  #entry-table td:first-child { text-align: center; color: #555; width: 36px; }
+  #entry-table td:nth-child(2) { text-align: center; width: 130px; }
+  #entry-table td:nth-child(4) { font-weight: bold; color: var(--blue); width: 150px; }
+  #entry-table td:last-child { width: 28px; text-align: center; }
+  .btn-delete { background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; padding: 2px 6px; }
+  .btn-delete:hover { color: #e05050; }
+  .btn-edit { background: none; border: none; color: #bbb; cursor: pointer; font-size: 12px; padding: 2px 4px; }
+  .btn-edit:hover { color: var(--blue); }
+
+  .empty-state { color: #bbb; padding: 28px 0; text-align: center; font-style: italic; }
+  .empty-state a { color: var(--blue); cursor: pointer; text-decoration: underline; }
+
+  /* FORM */
+  #add-form { max-width: 500px; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; font-weight: bold; letter-spacing: 0.7px; }
+  .field input { width: 100%; background: #f8f7f5; border: 1px solid var(--border); border-radius: 3px; padding: 9px 11px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; }
+  .field input:focus { border-color: var(--blue); }
+  #mitarbeiter-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ma-btn { background: #fff; color: #666; border: 1px solid var(--border); border-radius: 3px; padding: 5px 11px; cursor: pointer; font-size: 12px; }
+  .ma-btn.selected { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: bold; }
+  #ma-preview { margin-top: 8px; font-size: 12px; color: var(--blue); font-weight: bold; min-height: 18px; }
+  #btn-save-entry { background: var(--blue); color: #fff; border: none; padding: 10px 26px; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: bold; letter-spacing: 0.5px; margin-top: 4px; }
+
+  /* FOOTER */
+  #footer { background: #fff; border-top: 1px solid var(--border); padding: 11px 22px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+  #footer-info { font-size: 13px; color: var(--muted); }
+  #footer-info strong { color: var(--blue); }
+  #btn-export { background: var(--gold); color: var(--text); border: none; padding: 10px 22px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
+  #btn-export:disabled { background: #e8e4de; color: #bbb; cursor: not-allowed; }
+  #save-indicator { font-size: 11px; color: #6abf6a; margin-left: 12px; display: none; }
+
+  /* STATUS */
+  #status { margin-top: 14px; padding: 9px 13px; border-radius: 4px; font-size: 13px; display: none; }
+  #status.ok { background: #eef4ee; border: 1px solid #a8cfa8; color: #2d5a2d; }
+  #status.error { background: #fdf0ee; border: 1px solid #e0a0a0; color: #8b2020; }
+  #status.info { background: #eef2fb; border: 1px solid #a0b8e0; color: #1a3a6b; }
+
+  /* EDIT MODAL */
+  #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+  #modal-overlay.visible { display: flex; }
+  #modal { background: #fff; border-radius: 6px; padding: 24px; width: 480px; max-width: 90vw; }
+  #modal h3 { color: var(--blue); margin-bottom: 16px; font-size: 15px; }
+  #modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .btn-cancel { background: none; border: 1px solid var(--border); padding: 8px 18px; border-radius: 3px; cursor: pointer; font-size: 13px; }
+  .btn-confirm { background: var(--blue); color: #fff; border: none; padding: 8px 18px; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: bold; }
+
+  .loading { opacity: 0.6; pointer-events: none; }
+  #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 200; align-items: center; justify-content: center; font-size: 15px; color: var(--blue); font-weight: bold; }
+  #loading-overlay.visible { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-overlay">Wird gespeichert…</div>
+
+<!-- EDIT MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <h3>Eintrag bearbeiten</h3>
+    <div class="field"><label>ZEITRAUM</label><input id="edit-zeitraum" type="text"></div>
+    <div class="field"><label>AUFTRAG / ADRESSE</label><input id="edit-auftrag" type="text"></div>
+    <div class="field">
+      <label>MITARBEITER</label>
+      <div id="edit-ma-grid" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+      <div id="edit-ma-preview" style="font-size:12px;color:var(--blue);font-weight:bold;min-height:18px;"></div>
+    </div>
+    <div id="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
+      <button class="btn-confirm" onclick="saveEdit()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <h1>WOCHENPLAN 2026<span>Maler Müller</span></h1>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="user-info"></span>
+    <button id="btn-login" onclick="handleLogin()">🔐 MIT MICROSOFT ANMELDEN</button>
+  </div>
+</div>
+
+<!-- SETUP SCREEN (Client ID eingabe) -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <h2>Einmalige Einrichtung</h2>
+    <p>Um die App mit OneDrive zu verbinden, brauchst du eine Client-ID. Die bekommst du in 3 Schritten:</p>
+
+    <div class="setup-step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <strong>Entra Portal öffnen</strong>
+        <span>Geh auf <strong>entra.microsoft.com</strong> und melde dich mit info@maler-mueller.ch an</span>
+      </div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <strong>App registrieren</strong>
+        <span>Linkes Menü → <em>Anwendungen</em> → <em>App-Registrierungen</em> → <em>Neue Registrierung</em><br>
+        Name: <strong>Wochenplan</strong> · Kontotyp: <em>Nur diese Organisation</em> · Weiterleitungs-URI: <strong>http://localhost</strong> (Typ: Web) → Registrieren</span>
+      </div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <strong>Client-ID kopieren</strong>
+        <span>Nach der Registrierung siehst du die <em>Anwendungs-ID (Client)</em> – die hier eintragen:</span>
+        <input class="setup-input" id="client-id-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+      </div>
+    </div>
+
+    <button id="btn-connect" onclick="saveClientId()">VERBINDEN</button>
+
+    <div class="note">
+      💡 Die Client-ID wird nur in deinem Browser gespeichert. Kein Passwort, keine sensiblen Daten werden übertragen.
+    </div>
+  </div>
+</div>
+
+<!-- FILE PICKER -->
+<div id="file-screen" style="display:none;">
+  <div class="file-card">
+    <h2>📁 OneDrive – Datei auswählen</h2>
+    <div id="path-nav">OneDrive / </div>
+    <button id="btn-refresh" onclick="loadOneDriveFiles()">↻ Aktualisieren</button>
+    <div id="file-list"><div style="padding:20px;text-align:center;color:#bbb;">Wird geladen…</div></div>
+    <div style="margin-top:14px;font-size:12px;color:var(--muted);">Wähle die <strong>Jahrestabelle_2026.xlsx</strong> aus.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div id="app-inner">
+    <div id="sidebar"></div>
+    <div id="main">
+      <div id="kw-header">
+        <span id="kw-title"></span>
+        <span id="kw-datum"></span>
+        <span id="kw-info"></span>
+      </div>
+      <div id="tabs">
+        <button class="tab active" onclick="switchTab('view')">Übersicht</button>
+        <button class="tab" onclick="switchTab('add')">+ Eintrag hinzufügen</button>
+      </div>
+      <div id="tab-view"></div>
+      <div id="tab-add" style="display:none;">
+        <div id="add-form">
+          <div class="field"><label>ZEITRAUM *</label><input id="f-zeitraum" type="text" placeholder="z.B. 20.04 – 24.04  oder  ab 22.04"></div>
+          <div class="field"><label>AUFTRAG / ADRESSE *</label><input id="f-auftrag" type="text" placeholder="z.B. Fam. Müller, Bahnhofstr. 12 – Küche streichen"></div>
+          <div class="field">
+            <label>MITARBEITER</label>
+            <div id="mitarbeiter-grid"></div>
+            <div id="ma-preview"></div>
+          </div>
+          <button id="btn-save-entry" onclick="addEntry()">EINTRAG SPEICHERN</button>
+        </div>
+      </div>
+      <div id="status"></div>
+    </div>
+  </div>
+  <div id="footer">
+    <div id="footer-info">
+      Bereit
+      <span id="save-indicator">✓ Gespeichert</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span id="file-name-display" style="font-size:11px;color:var(--muted);"></span>
+      <button id="btn-export" onclick="saveToOneDrive()">💾 AUF ONEDRIVE SPEICHERN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const REDIRECT_URI = 'https://claude.ai';
+const SCOPES = ['Files.ReadWrite', 'User.Read'];
+
+const MITARBEITER = ['René','Joel','Zara','Josef','Karsten','Saskia','Fabiana','Beat','Boris','Urs','Sarah','Alex','Ronja','Adrian','Michele','Reto','Johanna','Karin','Claudio','Rahel'];
+
+const KW_META = [
+  {sheet:'Wochenplan',label:'KW 14',datum:'30.03 – 03.04.2026',info:'Karfreitag'},
+  {sheet:'Wochenplan KW 15',label:'KW 15',datum:'06.04 – 10.04.2026',info:'Ostermontag'},
+  {sheet:'Wochenplan KW 16',label:'KW 16',datum:'13.04 – 17.04.2026',info:''},
+  {sheet:'Wochenplan KW 17',label:'KW 17',datum:'20.04 – 24.04.2026',info:'Frühlingsferien'},
+  {sheet:'Wochenplan KW 18',label:'KW 18',datum:'27.04 – 01.05.2026',info:'1. Mai'},
+  {sheet:'Wochenplan KW 19',label:'KW 19',datum:'04.05 – 08.05.2026',info:''},
+  {sheet:'Wochenplan KW 20',label:'KW 20',datum:'11.05 – 15.05.2026',info:'Auffahrt'},
+  {sheet:'Wochenplan KW 21',label:'KW 21',datum:'18.05 – 22.05.2026',info:''},
+  {sheet:'Wochenplan KW 22',label:'KW 22',datum:'25.05 – 29.05.2026',info:'Pfingstmontag'},
+  {sheet:'Wochenplan KW 23',label:'KW 23',datum:'01.06 – 05.06.2026',info:''},
+  {sheet:'Wochenplan KW 24',label:'KW 24',datum:'08.06 – 12.06.2026',info:''},
+  {sheet:'Wochenplan KW 25',label:'KW 25',datum:'15.06 – 19.06.2026',info:''},
+  {sheet:'Wochenplan KW 26',label:'KW 26',datum:'22.06 – 26.06.2026',info:''},
+  {sheet:'Wochenplan KW 27',label:'KW 27',datum:'29.06 – 03.07.2026',info:''},
+  {sheet:'Wochenplan KW 28',label:'KW 28',datum:'06.07 – 10.07.2026',info:''},
+  {sheet:'Wochenplan KW 29',label:'KW 29',datum:'13.07 – 17.07.2026',info:'Sommerferien'},
+  {sheet:'Wochenplan KW 30',label:'KW 30',datum:'20.07 – 24.07.2026',info:'Sommerferien'},
+  {sheet:'Wochenplan KW 31',label:'KW 31',datum:'27.07 – 31.07.2026',info:'Sommerferien'},
+  {sheet:'Wochenplan KW 32',label:'KW 32',datum:'03.08 – 07.08.2026',info:'Sommerferien'},
+  {sheet:'Wochenplan KW 33',label:'KW 33',datum:'10.08 – 14.08.2026',info:'Sommerferien'},
+  {sheet:'Wochenplan KW 34',label:'KW 34',datum:'17.08 – 21.08.2026',info:''},
+  {sheet:'Wochenplan KW 35',label:'KW 35',datum:'24.08 – 28.08.2026',info:''},
+  {sheet:'Wochenplan KW 36',label:'KW 36',datum:'31.08 – 04.09.2026',info:''},
+  {sheet:'Wochenplan KW 37',label:'KW 37',datum:'07.09 – 11.09.2026',info:''},
+  {sheet:'Wochenplan KW 38',label:'KW 38',datum:'14.09 – 18.09.2026',info:''},
+  {sheet:'Wochenplan KW 39',label:'KW 39',datum:'21.09 – 25.09.2026',info:''},
+  {sheet:'Wochenplan KW 40',label:'KW 40',datum:'28.09 – 02.10.2026',info:''},
+  {sheet:'Wochenplan KW 41',label:'KW 41',datum:'05.10 – 09.10.2026',info:'Herbstferien'},
+  {sheet:'Wochenplan KW 42',label:'KW 42',datum:'12.10 – 16.10.2026',info:'Herbstferien'},
+  {sheet:'Wochenplan KW 43',label:'KW 43',datum:'19.10 – 23.10.2026',info:''},
+  {sheet:'Wochenplan KW 44',label:'KW 44',datum:'26.10 – 30.10.2026',info:''},
+  {sheet:'Wochenplan KW 45',label:'KW 45',datum:'02.11 – 06.11.2026',info:''},
+  {sheet:'Wochenplan KW 46',label:'KW 46',datum:'09.11 – 13.11.2026',info:''},
+  {sheet:'Wochenplan KW 47',label:'KW 47',datum:'16.11 – 20.11.2026',info:''},
+  {sheet:'Wochenplan KW 48',label:'KW 48',datum:'23.11 – 27.11.2026',info:''},
+  {sheet:'Wochenplan KW 49',label:'KW 49',datum:'30.11 – 04.12.2026',info:''},
+  {sheet:'Wochenplan KW 50',label:'KW 50',datum:'07.12 – 11.12.2026',info:''},
+  {sheet:'Wochenplan KW 51',label:'KW 51',datum:'14.12 – 18.12.2026',info:'Weihnachtsessen'},
+  {sheet:'Wochenplan KW 52',label:'KW 52',datum:'21.12 – 25.12.2026',info:'Weihnachtsferien'},
+];
+
+// ─── STATE ────────────────────────────────────────────────
+let accessToken = null;
+let selectedKW = 'Wochenplan KW 17';
+let workbookData = {}; // { sheetName: [{nr, zeitraum, auftrag, mitarbeiter}] }
+let fileId = null;
+let fileName = null;
+let activeTab = 'view';
+let selectedMa = [];
+let editIdx = null;
+let editMa = [];
+let clientId = localStorage.getItem('wp_client_id') || '';
+
+// ─── INIT ─────────────────────────────────────────────────
+window.onload = () => {
+  buildMitarbeiterGrid();
+  buildEditMaGrid();
+
+  // Check for auth callback
+  const hash = window.location.hash;
+  if (hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.substring(1));
+    accessToken = params.get('access_token');
+    localStorage.setItem('wp_token', accessToken);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  accessToken = accessToken || localStorage.getItem('wp_token');
+  clientId = localStorage.getItem('wp_client_id') || '';
+
+  if (clientId && accessToken) {
+    showFileScreen();
+  } else if (clientId) {
+    showSetupDone();
+  } else {
+    showSetup();
+  }
+};
+
+// ─── SCREENS ──────────────────────────────────────────────
+function showSetup() {
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('file-screen').style.display = 'none';
+  document.getElementById('app').classList.remove('visible');
+  if (clientId) document.getElementById('client-id-input').value = clientId;
+}
+
+function showSetupDone() {
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('file-screen').style.display = 'none';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('client-id-input').value = clientId;
+}
+
+function showFileScreen() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('file-screen').style.display = 'flex';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('btn-login').textContent = '✓ Angemeldet';
+  document.getElementById('btn-login').classList.add('connected');
+  loadOneDriveFiles();
+}
+
+function showApp() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('file-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  buildSidebar();
+  selectKW(selectedKW);
+}
+
+// ─── AUTH ─────────────────────────────────────────────────
+function saveClientId() {
+  const val = document.getElementById('client-id-input').value.trim();
+  if (!val || val.length < 30) { alert('Bitte eine gültige Client-ID eingeben.'); return; }
+  clientId = val;
+  localStorage.setItem('wp_client_id', clientId);
+  handleLogin();
+}
+
+function handleLogin() {
+  if (!clientId) { showSetup(); return; }
+  const TENANT_ID = '6eeab2a9-7b33-4cb8-bf1b-2ad52ff0f96c';
+  const url = `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/authorize`
+    + `?client_id=${clientId}`
+    + `&response_type=token`
+    + `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`
+    + `&scope=${encodeURIComponent(SCOPES.join(' '))}`
+    + `&response_mode=fragment`;
+  window.location.href = url;
+}
+
+// ─── ONEDRIVE ─────────────────────────────────────────────
+async function graphGet(url) {
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  if (res.status === 401) { localStorage.removeItem('wp_token'); accessToken = null; handleLogin(); return null; }
+  return res.json();
+}
+
+async function loadOneDriveFiles(folderId = null) {
+  const endpoint = folderId
+    ? `/me/drive/items/${folderId}/children`
+    : `/me/drive/root/children`;
+  const data = await graphGet(`${endpoint}?$filter=file ne null and endswith(name,'.xlsx') or folder ne null&$orderby=name`);
+  if (!data) return;
+
+  const list = document.getElementById('file-list');
+  list.innerHTML = '';
+
+  // Back button if in subfolder
+  if (folderId) {
+    const back = document.createElement('div');
+    back.className = 'file-item';
+    back.innerHTML = '<span class="file-icon">⬅</span><div><div class="file-name">.. Zurück</div></div>';
+    back.onclick = () => loadOneDriveFiles();
+    list.appendChild(back);
+  }
+
+  const items = data.value || [];
+  if (items.length === 0) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb;">Keine .xlsx Dateien gefunden</div>';
+    return;
+  }
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'file-item';
+    const icon = item.folder ? '📁' : '📊';
+    const modified = item.lastModifiedDateTime ? new Date(item.lastModifiedDateTime).toLocaleDateString('de-CH') : '';
+    div.innerHTML = `<span class="file-icon">${icon}</span><div><div class="file-name">${item.name}</div><div class="file-modified">${modified}</div></div>`;
+    if (item.folder) {
+      div.onclick = () => loadOneDriveFiles(item.id);
+    } else {
+      div.onclick = () => loadFile(item.id, item.name);
+    }
+    list.appendChild(div);
+  });
+}
+
+async function loadFile(id, name) {
+  fileId = id;
+  fileName = name;
+  document.getElementById('file-name-display').textContent = name;
+
+  const loading = document.getElementById('loading-overlay');
+  loading.textContent = 'Datei wird geladen…';
+  loading.classList.add('visible');
+
+  try {
+    const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${id}/content`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const arrayBuffer = await res.arrayBuffer();
+    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+
+    workbookData = {};
+    wb.SheetNames.forEach(sn => {
+      const ws = wb.Sheets[sn];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const entries = [];
+      for (let i = 4; i < rows.length; i++) {
+        const row = rows[i];
+        if (row[0] !== undefined && row[0] !== null && row[0] !== '') {
+          entries.push({
+            nr: row[0],
+            zeitraum: row[1] || '',
+            auftrag: row[2] || '',
+            mitarbeiter: row[3] || '',
+          });
+        }
+      }
+      workbookData[sn] = entries;
+    });
+
+    // Store raw workbook for re-export
+    window._rawWb = wb;
+    showApp();
+  } catch(e) {
+    showMsg('Fehler beim Laden der Datei.', 'error');
+  }
+  loading.classList.remove('visible');
+}
+
+async function saveToOneDrive() {
+  if (!fileId) return;
+  const loading = document.getElementById('loading-overlay');
+  loading.textContent = 'Wird auf OneDrive gespeichert…';
+  loading.classList.add('visible');
+
+  try {
+    const wb = window._rawWb;
+
+    // Write all data back to workbook with correct formatting info
+    KW_META.forEach(kw => {
+      const sn = kw.sheet;
+      if (!wb.SheetNames.includes(sn)) return;
+      const entries = workbookData[sn] || [];
+      const ws = wb.Sheets[sn];
+
+      // Keep rows 1-4 (header), rewrite data rows
+      // Find existing data range
+      const ref = ws['!ref'] ? XLSX.utils.decode_range(ws['!ref']) : {s:{r:0,c:0},e:{r:4,c:3}};
+
+      // Clear old data rows (row 5 onwards = index 4+)
+      for (let r = 4; r <= ref.e.r; r++) {
+        for (let c = 0; c < 4; c++) {
+          const addr = XLSX.utils.encode_cell({r, c});
+          delete ws[addr];
+        }
+      }
+
+      // Write new data
+      entries.forEach((e, i) => {
+        const r = i + 4; // row index (0-based), data starts at row 5 = index 4
+        ws[XLSX.utils.encode_cell({r, c:0})] = {v: i+1, t:'n'};
+        ws[XLSX.utils.encode_cell({r, c:1})] = {v: e.zeitraum, t:'s'};
+        ws[XLSX.utils.encode_cell({r, c:2})] = {v: e.auftrag, t:'s'};
+        ws[XLSX.utils.encode_cell({r, c:3})] = {v: e.mitarbeiter, t:'s'};
+      });
+
+      // Update range
+      const newEnd = Math.max(4, entries.length + 3);
+      ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:newEnd,c:3}});
+    });
+
+    const wbOut = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbOut], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+    const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      },
+      body: blob
+    });
+
+    if (res.ok) {
+      const ind = document.getElementById('save-indicator');
+      ind.style.display = 'inline';
+      setTimeout(() => ind.style.display = 'none', 3000);
+      showMsg('✓ Auf OneDrive gespeichert – ' + fileName, 'ok');
+    } else {
+      throw new Error('HTTP ' + res.status);
+    }
+  } catch(e) {
+    showMsg('Fehler beim Speichern: ' + e.message, 'error');
+  }
+  loading.classList.remove('visible');
+}
+
+// ─── UI ───────────────────────────────────────────────────
+function buildSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = '';
+  KW_META.forEach(kw => {
+    const count = (workbookData[kw.sheet] || []).length;
+    const div = document.createElement('div');
+    div.className = 'kw-item' + (kw.sheet === selectedKW ? ' active' : '');
+    div.id = 'kw-' + kw.sheet.replace(/\s/g,'_');
+    div.innerHTML = `<span>${kw.label}</span>${count > 0 ? `<span class="kw-badge">${count}</span>` : ''}`;
+    div.onclick = () => { selectKW(kw.sheet); switchTab('view'); };
+    sb.appendChild(div);
+  });
+}
+
+function selectKW(sheet) {
+  document.querySelectorAll('.kw-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('kw-' + sheet.replace(/\s/g,'_'));
+  if (el) el.classList.add('active');
+  selectedKW = sheet;
+  const meta = KW_META.find(k => k.sheet === sheet) || {};
+  document.getElementById('kw-title').textContent = meta.label || '';
+  document.getElementById('kw-datum').textContent = meta.datum || '';
+  document.getElementById('kw-info').textContent = meta.info ? '· ' + meta.info : '';
+  renderView();
+  updateFooter();
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='view')||(i===1&&tab==='add')));
+  document.getElementById('tab-view').style.display = tab === 'view' ? '' : 'none';
+  document.getElementById('tab-add').style.display = tab === 'add' ? '' : 'none';
+  if (tab === 'add') { document.getElementById('f-zeitraum').focus(); }
+}
+
+function renderView() {
+  const entries = workbookData[selectedKW] || [];
+  const div = document.getElementById('tab-view');
+  if (entries.length === 0) {
+    div.innerHTML = `<div class="empty-state">Keine Einträge für diese Woche.<br><a onclick="switchTab('add')">Eintrag hinzufügen →</a></div>`;
+    return;
+  }
+  let html = `<table id="entry-table"><thead><tr><th>Nr.</th><th>Zeitraum</th><th>Auftrag / Adresse</th><th>Mitarbeiter</th><th></th></tr></thead><tbody>`;
+  entries.forEach((e, i) => {
+    const cls = i % 2 === 0 ? 'odd' : 'even';
+    html += `<tr class="${cls}">
+      <td>${i+1}</td>
+      <td>${e.zeitraum || ''}</td>
+      <td>${e.auftrag || ''}</td>
+      <td>${e.mitarbeiter || ''}</td>
+      <td>
+        <button class="btn-edit" onclick="openEdit(${i})" title="Bearbeiten">✏</button>
+        <button class="btn-delete" onclick="deleteEntry(${i})" title="Löschen">✕</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  div.innerHTML = html;
+}
+
+function updateFooter() {
+  const total = Object.values(workbookData).flat().length;
+  const kws = Object.keys(workbookData).filter(k => workbookData[k].length > 0).length;
+  document.getElementById('footer-info').innerHTML =
+    `<strong>${total}</strong> Einträge total · <strong>${kws}</strong> Wochen <span id="save-indicator" style="display:none;color:#6abf6a;margin-left:12px;">✓ Gespeichert</span>`;
+}
+
+// ─── MITARBEITER GRID ─────────────────────────────────────
+function buildMitarbeiterGrid() {
+  const grid = document.getElementById('mitarbeiter-grid');
+  MITARBEITER.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'ma-btn';
+    btn.textContent = m;
+    btn.onclick = () => toggleMa(m, btn);
+    grid.appendChild(btn);
+  });
+}
+
+function toggleMa(name, btn) {
+  if (selectedMa.includes(name)) {
+    selectedMa = selectedMa.filter(x => x !== name);
+    btn.classList.remove('selected');
+  } else {
+    selectedMa.push(name);
+    btn.classList.add('selected');
+  }
+  document.getElementById('ma-preview').textContent = selectedMa.length ? '→ ' + selectedMa.join(', ') : '';
+}
+
+function resetForm() {
+  document.getElementById('f-zeitraum').value = '';
+  document.getElementById('f-auftrag').value = '';
+  selectedMa = [];
+  document.querySelectorAll('#mitarbeiter-grid .ma-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('ma-preview').textContent = '';
+}
+
+// ─── CRUD ─────────────────────────────────────────────────
+function addEntry() {
+  const zt = document.getElementById('f-zeitraum').value.trim();
+  const au = document.getElementById('f-auftrag').value.trim();
+  if (!zt || !au) { showMsg('Zeitraum und Auftrag sind Pflichtfelder.', 'error'); return; }
+
+  if (!workbookData[selectedKW]) workbookData[selectedKW] = [];
+  workbookData[selectedKW].push({ zeitraum: zt, auftrag: au, mitarbeiter: selectedMa.join(', ') });
+
+  resetForm();
+  buildSidebar();
+  selectKW(selectedKW);
+  switchTab('view');
+  showMsg('✓ Eintrag hinzugefügt', 'ok');
+}
+
+function deleteEntry(idx) {
+  workbookData[selectedKW].splice(idx, 1);
+  buildSidebar();
+  renderView();
+  updateFooter();
+}
+
+// ─── EDIT ─────────────────────────────────────────────────
+function buildEditMaGrid() {
+  const grid = document.getElementById('edit-ma-grid');
+  MITARBEITER.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'ma-btn';
+    btn.textContent = m;
+    btn.onclick = () => toggleEditMa(m, btn);
+    grid.appendChild(btn);
+  });
+}
+
+function toggleEditMa(name, btn) {
+  if (editMa.includes(name)) { editMa = editMa.filter(x => x !== name); btn.classList.remove('selected'); }
+  else { editMa.push(name); btn.classList.add('selected'); }
+  document.getElementById('edit-ma-preview').textContent = editMa.length ? '→ ' + editMa.join(', ') : '';
+}
+
+function openEdit(idx) {
+  const e = workbookData[selectedKW][idx];
+  editIdx = idx;
+  document.getElementById('edit-zeitraum').value = e.zeitraum || '';
+  document.getElementById('edit-auftrag').value = e.auftrag || '';
+  editMa = e.mitarbeiter ? e.mitarbeiter.split(', ').filter(Boolean) : [];
+  document.querySelectorAll('#edit-ma-grid .ma-btn').forEach(btn => {
+    btn.classList.toggle('selected', editMa.includes(btn.textContent));
+  });
+  document.getElementById('edit-ma-preview').textContent = editMa.length ? '→ ' + editMa.join(', ') : '';
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+  editIdx = null;
+}
+
+function saveEdit() {
+  if (editIdx === null) return;
+  workbookData[selectedKW][editIdx] = {
+    zeitraum: document.getElementById('edit-zeitraum').value.trim(),
+    auftrag: document.getElementById('edit-auftrag').value.trim(),
+    mitarbeiter: editMa.join(', '),
+  };
+  closeModal();
+  renderView();
+  updateFooter();
+  showMsg('✓ Eintrag aktualisiert', 'ok');
+}
+
+// ─── HELPERS ──────────────────────────────────────────────
+function showMsg(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = type;
+  el.style.display = 'block';
+  if (type !== 'error') setTimeout(() => el.style.display = 'none', 4000);
+}
+
+// Enter key on form fields
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && activeTab === 'add') {
+    if (document.activeElement.id === 'f-auftrag') addEntry();
+  }
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
