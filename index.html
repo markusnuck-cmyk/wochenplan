@@ -685,8 +685,9 @@ function addEntry() {
 
   resetForm();
   buildSidebar();
-  selectKW(selectedKW);
+  renderView();
   switchTab('view');
+  updateFooter();
   showMsg('✓ Eintrag hinzugefügt', 'ok');
 }
 
