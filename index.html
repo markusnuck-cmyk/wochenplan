@@ -486,7 +486,7 @@ async function loadFile(id, name) {
       const entries = [];
       for (let i = 4; i < rows.length; i++) {
         const row = rows[i];
-        if (row[0] !== undefined && row[0] !== null && row[0] !== '') {
+        if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
           entries.push({
             nr: row[0],
             zeitraum: row[1] || '',
