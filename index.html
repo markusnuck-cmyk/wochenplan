@@ -427,7 +427,7 @@ async function loadOneDriveFiles(folderId = null) {
   const endpoint = folderId
     ? `/me/drive/items/${folderId}/children`
     : `/me/drive/root/children`;
-  const data = await graphGet(`${endpoint}?$filter=file ne null and endswith(name,'.xlsx') or folder ne null&$orderby=name`);
+  const data = await graphGet(`${endpoint}?$top=100&$orderby=name`);
   if (!data) return;
 
   const list = document.getElementById('file-list');
