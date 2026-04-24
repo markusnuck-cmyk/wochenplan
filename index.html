@@ -419,10 +419,31 @@ async function graphGet(url) {
 
 async function loadOneDriveFiles(folderId = null) {
   if (!folderId) {
+    // First search in own OneDrive for Jahrestabellen folder
     const search = await graphGet(`/me/drive/root/search(q='Jahrestabellen')?$top=10`);
     if (search && search.value) {
       const folder = search.value.find(i => i.folder && i.name === 'Jahrestabellen');
       if (folder) folderId = folder.id;
+    }
+    // If not found, search shared items for Jahrestabelle
+    if (!folderId) {
+      const shared = await graphGet(`/me/drive/sharedWithMe?$top=50`);
+      if (shared && shared.value) {
+        const file = shared.value.find(i => i.name && i.name.includes('Jahrestabelle'));
+        if (file) {
+          await loadFile(file.id, file.name);
+          return;
+        }
+      }
+      // Also try searching across all drives
+      const searchAll = await graphGet(`/me/drive/root/search(q='Jahrestabelle 2026')?$top=10`);
+      if (searchAll && searchAll.value) {
+        const file = searchAll.value.find(i => i.file && i.name.includes('Jahrestabelle'));
+        if (file) {
+          await loadFile(file.id, file.name);
+          return;
+        }
+      }
     }
   }
   const endpoint = folderId
