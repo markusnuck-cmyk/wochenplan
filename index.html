@@ -102,6 +102,18 @@
   .empty-state { color: #bbb; padding: 28px 0; text-align: center; font-style: italic; }
   .empty-state a { color: var(--blue); cursor: pointer; text-decoration: underline; }
 
+  /* ABSENZ */
+  #absenz-box { background: #fff8e8; border: 1px solid #e8d090; border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px; }
+  #absenz-box label { font-size: 11px; font-weight: bold; color: #7a5a10; letter-spacing: 0.7px; white-space: nowrap; margin-top: 2px; }
+  #absenz-text { flex: 1; font-size: 13px; color: #5a3e00; min-height: 18px; }
+  #absenz-edit-area { display: none; flex: 1; }
+  #absenz-input { width: 100%; background: #fff; border: 1px solid #e8d090; border-radius: 3px; padding: 7px 10px; font-size: 13px; font-family: inherit; color: var(--text); outline: none; }
+  #absenz-input:focus { border-color: var(--gold); }
+  #btn-absenz-edit { background: none; border: none; color: #b8921a; cursor: pointer; font-size: 12px; padding: 2px 6px; }
+  #btn-absenz-edit:hover { color: #7a5a10; }
+  #btn-absenz-save { background: var(--gold); color: var(--text); border: none; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 6px; }
+  #btn-absenz-cancel { background: none; border: 1px solid var(--border); padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-left: 4px; }
+
   /* FORM */
   #add-form { max-width: 500px; }
   .field { margin-bottom: 13px; }
@@ -240,6 +252,16 @@
         <button class="tab active" onclick="switchTab('view')">Übersicht</button>
         <button class="tab" onclick="switchTab('add')">+ Eintrag hinzufügen</button>
       </div>
+      <div id="absenz-box">
+        <label>⚠ ABSENZEN / FERIEN</label>
+        <div id="absenz-text" style="color:#bbb;font-style:italic;">–</div>
+        <div id="absenz-edit-area">
+          <input id="absenz-input" type="text" placeholder="z.B. 20.04–24.04.2026 Frühlingsferien / Joel, Fabiana 1Wo Ferien">
+          <button id="btn-absenz-save" onclick="saveAbsenz()">Speichern</button>
+          <button id="btn-absenz-cancel" onclick="cancelAbsenz()">Abbrechen</button>
+        </div>
+        <button id="btn-absenz-edit" onclick="editAbsenz()" title="Bearbeiten">✏ Bearbeiten</button>
+      </div>
       <div id="tab-view"></div>
       <div id="tab-add" style="display:none;">
         <div id="add-form">
@@ -321,6 +343,7 @@ const KW_META = [
 let accessToken = null;
 let selectedKW = 'Wochenplan KW 17';
 let workbookData = {}; // { sheetName: [{nr, zeitraum, auftrag, mitarbeiter}] }
+let absenzData = {};   // { sheetName: string } – Inhalt von Zelle A2
 let fileId = null;
 let fileName = null;
 let activeTab = 'view';
@@ -502,9 +525,12 @@ async function loadFile(id, name) {
     const wb = XLSX.read(arrayBuffer, { type: 'array' });
 
     workbookData = {};
+    absenzData = {};
     wb.SheetNames.forEach(sn => {
       const ws = wb.Sheets[sn];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      // Lese Absenz aus Zeile 2 (Index 1), Spalte A (Index 0)
+      absenzData[sn] = (rows[1] && rows[1][0] !== undefined && rows[1][0] !== null) ? String(rows[1][0]) : '';
       const entries = [];
       for (let i = 4; i < rows.length; i++) {
         const row = rows[i];
@@ -549,7 +575,9 @@ async function saveToOneDrive() {
       // Find existing data range
       const ref = ws['!ref'] ? XLSX.utils.decode_range(ws['!ref']) : {s:{r:0,c:0},e:{r:4,c:3}};
 
-      // Clear old data rows (row 5 onwards = index 4+)
+      // Write absenz back to A2
+      const absenz = absenzData[sn] || '';
+      ws[XLSX.utils.encode_cell({r:1, c:0})] = absenz ? {v: absenz, t:'s'} : {v:'', t:'s'};
       for (let r = 4; r <= ref.e.r; r++) {
         for (let c = 0; c < 4; c++) {
           const addr = XLSX.utils.encode_cell({r, c});
@@ -622,6 +650,7 @@ function selectKW(sheet) {
   document.getElementById('kw-datum').textContent = meta.datum || '';
   document.getElementById('kw-info').textContent = meta.info ? '· ' + meta.info : '';
   renderView();
+  updateAbsenzBox();
   updateFooter();
 }
 
@@ -767,6 +796,38 @@ function saveEdit() {
   renderView();
   updateFooter();
   showMsg('✓ Eintrag aktualisiert', 'ok');
+}
+
+// ─── ABSENZ ───────────────────────────────────────────────
+function updateAbsenzBox() {
+  const val = absenzData[selectedKW] || '';
+  const textEl = document.getElementById('absenz-text');
+  textEl.textContent = val || '–';
+  textEl.style.color = val ? '#5a3e00' : '#bbb';
+  textEl.style.fontStyle = val ? 'normal' : 'italic';
+  document.getElementById('absenz-edit-area').style.display = 'none';
+  document.getElementById('absenz-text').style.display = '';
+  document.getElementById('btn-absenz-edit').style.display = '';
+}
+
+function editAbsenz() {
+  const val = absenzData[selectedKW] || '';
+  document.getElementById('absenz-input').value = val;
+  document.getElementById('absenz-text').style.display = 'none';
+  document.getElementById('btn-absenz-edit').style.display = 'none';
+  document.getElementById('absenz-edit-area').style.display = 'flex';
+  document.getElementById('absenz-input').focus();
+}
+
+function saveAbsenz() {
+  const val = document.getElementById('absenz-input').value.trim();
+  absenzData[selectedKW] = val;
+  updateAbsenzBox();
+  showMsg('✓ Absenz gespeichert – nicht vergessen: auf OneDrive speichern!', 'ok');
+}
+
+function cancelAbsenz() {
+  updateAbsenzBox();
 }
 
 // ─── HELPERS ──────────────────────────────────────────────
