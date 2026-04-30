@@ -559,9 +559,18 @@ async function loadOneDriveFiles(folderId = null) {
     try {
       const search = await graphGet(`/me/drive/root/search(q='Jahrestabelle')?$top=10`);
       if (search && search.value) {
-        const found = search.value.find(i => i.file && i.name.toLowerCase().includes('jahrestabelle') && !i.name.includes('.url'));
+        // Echte xlsx suchen
+        const found = search.value.find(i => i.file && i.name.toLowerCase().includes('jahrestabelle') && i.name.toLowerCase().endsWith('.xlsx'));
         if (found) {
           await loadFile(found.id, found.name, null);
+          return;
+        }
+        // Verknüpfung (.url) suchen und remoteItem laden
+        const foundUrl = search.value.find(i => i.name && i.name.toLowerCase().includes('jahrestabelle') && i.name.includes('.url'));
+        if (foundUrl && foundUrl.remoteItem) {
+          const ri = foundUrl.remoteItem;
+          const rDriveId = ri.parentReference ? ri.parentReference.driveId : null;
+          await loadFile(ri.id, 'Jahrestabelle 2026.xlsx', rDriveId);
           return;
         }
         const folder = search.value.find(i => i.folder && i.name === 'Jahrestabellen');
