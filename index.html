@@ -622,8 +622,54 @@ async function loadOneDriveFiles(folderId = null) {
           const rDriveId = (ri.parentReference && ri.parentReference.driveId) ? ri.parentReference.driveId : null;
           div.innerHTML = `<span class="file-icon">📊</span><div><div class="file-name">${item.name} <span style="color:#4caf50;font-size:11px;">✓ Geteilt</span></div><div class="file-modified">von Rechnungen</div></div>`;
           div.onclick = async () => {
-            const dbgMsg = 'ri.id=' + ri.id + ' rDriveId=' + rDriveId + ' found.id=' + item.id;
-            document.querySelector('.file-card h2').textContent = dbgMsg;
+            const loading2 = document.getElementById('loading-overlay');
+            loading2.textContent = 'Datei wird geladen…';
+            loading2.classList.add('visible');
+            try {
+              // Direkt über shares API mit dem bekannten Share-Link
+              const shareUrl = 'https://malermuellerag-my.sharepoint.com/:x:/r/personal/rechnungen_maler-mueller_ch/_layouts/15/Doc.aspx?sourcedoc=%7B8CFF5995-8A29-48D2-B861-E24059635AD9%7D&file=Jahrestabelle%202026.xlsx&action=default&mobileredirect=true';
+              const encoded = btoa(shareUrl).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+              const shareRes2 = await fetch(
+                'https://graph.microsoft.com/v1.0/shares/u!' + encoded + '/driveItem',
+                { headers: { Authorization: 'Bearer ' + accessToken } }
+              );
+              if (shareRes2.ok) {
+                const sj = await shareRes2.json();
+                const sDriveId = sj.parentReference ? sj.parentReference.driveId : null;
+                const sId = sj.id;
+                if (sDriveId && sId) {
+                  const cr = await fetch(
+                    'https://graph.microsoft.com/v1.0/drives/' + sDriveId + '/items/' + sId + '/content',
+                    { headers: { Authorization: 'Bearer ' + accessToken } }
+                  );
+                  if (cr.ok) {
+                    fileId = sId; fileName = 'Jahrestabelle 2026.xlsx'; window._driveId = sDriveId;
+                    document.getElementById('file-name-display').textContent = fileName;
+                    const ab = await cr.arrayBuffer();
+                    const wb = XLSX.read(ab, { type: 'array' });
+                    workbookData = {}; absenzData = {};
+                    wb.SheetNames.forEach(sn => {
+                      const ws = wb.Sheets[sn];
+                      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                      absenzData[sn] = (rows[1] && rows[1][0] !== undefined) ? String(rows[1][0]) : '';
+                      const entries = [];
+                      for (let i = 4; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
+                          entries.push({ nr: row[0], zeitraum: row[1]||'', auftrag: row[2]||'', mitarbeiter: row[3]||'' });
+                        }
+                      }
+                      workbookData[sn] = entries;
+                    });
+                    window._rawWb = wb;
+                    loading2.classList.remove('visible');
+                    showApp();
+                    return;
+                  }
+                }
+              }
+            } catch(ex) { /* weiter */ }
+            // Fallback: normale loadFile
             await loadFile(ri.id, 'Jahrestabelle 2026.xlsx', rDriveId);
           };
           list.appendChild(div);
