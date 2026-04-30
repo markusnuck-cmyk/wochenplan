@@ -497,51 +497,57 @@ async function loadOneDriveFiles(folderId = null) {
       loading.textContent = 'Datei wird geladen…';
       loading.classList.add('visible');
 
-      // Direkt über bekannte Site und File-GUID von rechnungen@maler-mueller.ch laden
+      // Datei über sharedWithMe suchen (freigegebene Datei von rechnungen@maler-mueller.ch)
       const FILE_GUID = '8CFF5995-8A29-48D2-B861-E24059635AD9';
-      const SITE_USER = 'rechnungen_maler-mueller_ch';
-
-      // Schritt 1: Drive-ID des Rechnungen-OneDrive ermitteln
       try {
-        const siteRes = await fetch(
-          `https://graph.microsoft.com/v1.0/users/${SITE_USER.replace(/_/g,'.')}/drive`,
+        // Methode 1: sharedWithMe Liste durchsuchen
+        const sharedRes = await fetch(
+          `https://graph.microsoft.com/v1.0/me/drive/sharedWithMe?$top=50`,
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-        if (siteRes.ok) {
-          const siteJson = await siteRes.json();
-          const rechnDriveId = siteJson.id;
-
-          // Schritt 2: Datei über GUID laden
-          const contentRes = await fetch(
-            `https://graph.microsoft.com/v1.0/drives/${rechnDriveId}/items/${FILE_GUID}/content`,
-            { headers: { Authorization: `Bearer ${accessToken}` } }
+        if (sharedRes.ok) {
+          const sharedJson = await sharedRes.json();
+          const found = (sharedJson.value || []).find(i =>
+            i.name && i.name.toLowerCase().includes('jahrestabelle') ||
+            (i.remoteItem && i.remoteItem.id && i.remoteItem.id.toLowerCase().includes(FILE_GUID.toLowerCase()))
           );
-          if (contentRes.ok) {
-            fileId = FILE_GUID;
-            fileName = 'Jahrestabelle 2026.xlsx';
-            window._driveId = rechnDriveId;
-            document.getElementById('file-name-display').textContent = fileName;
-            const arrayBuffer = await contentRes.arrayBuffer();
-            const wb = XLSX.read(arrayBuffer, { type: 'array' });
-            workbookData = {};
-            absenzData = {};
-            wb.SheetNames.forEach(sn => {
-              const ws = wb.Sheets[sn];
-              const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-              absenzData[sn] = (rows[1] && rows[1][0] !== undefined && rows[1][0] !== null) ? String(rows[1][0]) : '';
-              const entries = [];
-              for (let i = 4; i < rows.length; i++) {
-                const row = rows[i];
-                if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
-                  entries.push({ nr: row[0], zeitraum: row[1] || '', auftrag: row[2] || '', mitarbeiter: row[3] || '' });
-                }
+          if (found) {
+            const remoteItem = found.remoteItem || found;
+            const rDriveId = remoteItem.parentReference ? remoteItem.parentReference.driveId : null;
+            const rId = remoteItem.id;
+            if (rDriveId && rId) {
+              const contentRes = await fetch(
+                `https://graph.microsoft.com/v1.0/drives/${rDriveId}/items/${rId}/content`,
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+              );
+              if (contentRes.ok) {
+                fileId = rId;
+                fileName = found.name || 'Jahrestabelle 2026.xlsx';
+                window._driveId = rDriveId;
+                document.getElementById('file-name-display').textContent = fileName;
+                const arrayBuffer = await contentRes.arrayBuffer();
+                const wb = XLSX.read(arrayBuffer, { type: 'array' });
+                workbookData = {};
+                absenzData = {};
+                wb.SheetNames.forEach(sn => {
+                  const ws = wb.Sheets[sn];
+                  const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                  absenzData[sn] = (rows[1] && rows[1][0] !== undefined && rows[1][0] !== null) ? String(rows[1][0]) : '';
+                  const entries = [];
+                  for (let i = 4; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
+                      entries.push({ nr: row[0], zeitraum: row[1] || '', auftrag: row[2] || '', mitarbeiter: row[3] || '' });
+                    }
+                  }
+                  workbookData[sn] = entries;
+                });
+                window._rawWb = wb;
+                loading.classList.remove('visible');
+                showApp();
+                return;
               }
-              workbookData[sn] = entries;
-            });
-            window._rawWb = wb;
-            loading.classList.remove('visible');
-            showApp();
-            return;
+            }
           }
         }
       } catch(e2) { /* weiter */ }
