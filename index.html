@@ -491,52 +491,59 @@ async function loadOneDriveFiles(folderId = null) {
   list.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb;">Wird geladen…</div>';
 
   if (!folderId) {
-    // ── Direkt über SharePoint-Link laden ──
+    // ── Direkt über bekannte Datei-ID und Drive laden ──
     try {
+      const loading = document.getElementById('loading-overlay');
+      loading.textContent = 'Datei wird geladen…';
+      loading.classList.add('visible');
+
+      // Zuerst Drive-ID von info's OneDrive ermitteln über Shares-API
       const shareUrl = 'https://malermuellerag-my.sharepoint.com/:x:/g/personal/info_maler-mueller_ch/IQDtPInXDKHjQZ-FJVWBEQTGAbe_43oBcxFiUpGZAm1WITg?e=UbMeTw';
       const encoded = btoa(shareUrl).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-      const shareRes = await graphGet(`/shares/u!${encoded}/driveItem`);
-      if (shareRes && shareRes.id) {
-        const driveId = shareRes.parentReference ? shareRes.parentReference.driveId : null;
-        // Direkt Inhalt über drives/{driveId}/items/{id}/content laden
-        const contentUrl = driveId
-          ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${shareRes.id}/content`
-          : `https://graph.microsoft.com/v1.0/me/drive/items/${shareRes.id}/content`;
-        
-        const loading = document.getElementById('loading-overlay');
-        loading.textContent = 'Datei wird geladen…';
-        loading.classList.add('visible');
-        
-        const res = await fetch(contentUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
-        if (res.ok) {
-          fileId = shareRes.id;
-          fileName = shareRes.name || 'Jahrestabelle 2026.xlsx';
-          window._driveId = driveId;
-          document.getElementById('file-name-display').textContent = fileName;
-          const arrayBuffer = await res.arrayBuffer();
-          const wb = XLSX.read(arrayBuffer, { type: 'array' });
-          workbookData = {};
-          absenzData = {};
-          wb.SheetNames.forEach(sn => {
-            const ws = wb.Sheets[sn];
-            const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-            absenzData[sn] = (rows[1] && rows[1][0] !== undefined && rows[1][0] !== null) ? String(rows[1][0]) : '';
-            const entries = [];
-            for (let i = 4; i < rows.length; i++) {
-              const row = rows[i];
-              if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
-                entries.push({ nr: row[0], zeitraum: row[1] || '', auftrag: row[2] || '', mitarbeiter: row[3] || '' });
-              }
-            }
-            workbookData[sn] = entries;
+      const shareRes = await fetch(`https://graph.microsoft.com/v1.0/shares/u!${encoded}/driveItem`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+
+      if (shareRes.ok) {
+        const shareJson = await shareRes.json();
+        const realDriveId = shareJson.parentReference ? shareJson.parentReference.driveId : null;
+        const realId = shareJson.id;
+
+        if (realDriveId && realId) {
+          const contentRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${realDriveId}/items/${realId}/content`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
           });
-          window._rawWb = wb;
-          loading.classList.remove('visible');
-          showApp();
-          return;
+
+          if (contentRes.ok) {
+            fileId = realId;
+            fileName = shareJson.name || 'Jahrestabelle 2026.xlsx';
+            window._driveId = realDriveId;
+            document.getElementById('file-name-display').textContent = fileName;
+            const arrayBuffer = await contentRes.arrayBuffer();
+            const wb = XLSX.read(arrayBuffer, { type: 'array' });
+            workbookData = {};
+            absenzData = {};
+            wb.SheetNames.forEach(sn => {
+              const ws = wb.Sheets[sn];
+              const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+              absenzData[sn] = (rows[1] && rows[1][0] !== undefined && rows[1][0] !== null) ? String(rows[1][0]) : '';
+              const entries = [];
+              for (let i = 4; i < rows.length; i++) {
+                const row = rows[i];
+                if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
+                  entries.push({ nr: row[0], zeitraum: row[1] || '', auftrag: row[2] || '', mitarbeiter: row[3] || '' });
+                }
+              }
+              workbookData[sn] = entries;
+            });
+            window._rawWb = wb;
+            loading.classList.remove('visible');
+            showApp();
+            return;
+          }
         }
-        loading.classList.remove('visible');
       }
+      loading.classList.remove('visible');
     } catch(e) { /* weiter */ }
 
     // ── Fallback: Im eigenen OneDrive suchen ──
