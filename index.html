@@ -498,7 +498,7 @@ async function loadOneDriveFiles(folderId = null) {
       loading.classList.add('visible');
 
       // Zuerst Drive-ID von info's OneDrive ermitteln über Shares-API
-      const shareUrl = 'https://malermuellerag-my.sharepoint.com/:x:/g/personal/rechnungen_maler-mueller_ch/IQCVWf-MKYrSSLhh4kBZY1rZAfXCL0eC7jFCCLW1pUG3k_4?e=hLFvls';
+      const shareUrl = 'https://malermuellerag-my.sharepoint.com/:x:/g/personal/rechnungen_maler-mueller_ch/IQCVWf-MKYrSSLhh4kBZY1rZAQLJuspeFgtBFbI00CFzrZw?e=NNfMcm';
       const encoded = btoa(shareUrl).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
       const shareRes = await fetch(`https://graph.microsoft.com/v1.0/shares/u!${encoded}/driveItem`, {
         headers: { Authorization: `Bearer ${accessToken}` }
