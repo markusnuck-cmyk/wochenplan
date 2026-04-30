@@ -497,10 +497,14 @@ async function loadOneDriveFiles(folderId = null) {
       if (shared && shared.value) {
         const sharedFile = shared.value.find(i => i.name && i.name.toLowerCase().includes('jahrestabelle'));
         if (sharedFile) {
-          const id = sharedFile.remoteItem ? sharedFile.remoteItem.id : sharedFile.id;
-          const driveId = sharedFile.remoteItem && sharedFile.remoteItem.parentReference
-            ? sharedFile.remoteItem.parentReference.driveId : null;
-          await loadFile(id, sharedFile.name, driveId);
+          const remoteItem = sharedFile.remoteItem;
+          if (remoteItem) {
+            const id = remoteItem.id;
+            const driveId = remoteItem.parentReference ? remoteItem.parentReference.driveId : null;
+            await loadFile(id, sharedFile.name, driveId);
+          } else {
+            await loadFile(sharedFile.id, sharedFile.name, null);
+          }
           return;
         }
       }
