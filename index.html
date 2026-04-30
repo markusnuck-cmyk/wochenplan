@@ -566,14 +566,33 @@ async function loadFile(id, name, driveId) {
   loading.classList.add('visible');
 
   try {
+    // Zuerst Item-Metadaten holen um echte Datei-ID zu finden (bei Verknüpfungen)
+    let realId = id;
+    let realDriveId = driveId;
+    try {
+      const metaUrl = driveId
+        ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}?$expand=remoteItem`
+        : `https://graph.microsoft.com/v1.0/me/drive/items/${id}?$expand=remoteItem`;
+      const meta = await fetch(metaUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (meta.ok) {
+        const metaJson = await meta.json();
+        if (metaJson.remoteItem) {
+          realId = metaJson.remoteItem.id;
+          realDriveId = metaJson.remoteItem.parentReference ? metaJson.remoteItem.parentReference.driveId : null;
+        }
+      }
+    } catch(e) { /* ignorieren */ }
+
     const endpoints = [];
-    if (driveId) endpoints.push(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/content`);
+    if (realDriveId) endpoints.push(`https://graph.microsoft.com/v1.0/drives/${realDriveId}/items/${realId}/content`);
+    endpoints.push(`https://graph.microsoft.com/v1.0/me/drive/items/${realId}/content`);
+    if (driveId && driveId !== realDriveId) endpoints.push(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/content`);
     endpoints.push(`https://graph.microsoft.com/v1.0/me/drive/items/${id}/content`);
 
     let res = null;
     for (const ep of endpoints) {
       const r = await fetch(ep, { headers: { Authorization: `Bearer ${accessToken}` } });
-      if (r.ok) { res = r; break; }
+      if (r.ok) { res = r; fileId = realId; window._driveId = realDriveId; break; }
     }
     if (!res) throw new Error('Datei nicht zugänglich');
     const arrayBuffer = await res.arrayBuffer();
