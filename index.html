@@ -507,24 +507,30 @@ async function loadOneDriveFiles(folderId = null) {
         );
         if (sharedRes.ok) {
           const sharedJson = await sharedRes.json();
-          const _dbg = (sharedJson.value||[]).map(i=>i.name||'?').join(', ')||'(leer)'; loading.textContent = 'Geteilt: ' + _dbg;
           const found = (sharedJson.value || []).find(i =>
-            i.name && i.name.toLowerCase().includes('jahrestabelle') ||
-            (i.remoteItem && i.remoteItem.id && i.remoteItem.id.toLowerCase().includes(FILE_GUID.toLowerCase()))
+            i.name && i.name.toLowerCase().includes('jahrestabelle') && !i.name.includes('.url')
           );
           if (found) {
-            const remoteItem = found.remoteItem || found;
-            const rDriveId = remoteItem.parentReference ? remoteItem.parentReference.driveId : null;
-            const rId = remoteItem.id;
-            if (rDriveId && rId) {
-              const contentRes = await fetch(
-                `https://graph.microsoft.com/v1.0/drives/${rDriveId}/items/${rId}/content`,
-                { headers: { Authorization: `Bearer ${accessToken}` } }
-              );
-              if (contentRes.ok) {
-                fileId = rId;
-                fileName = found.name || 'Jahrestabelle 2026.xlsx';
-                window._driveId = rDriveId;
+            // remoteItem bevorzugen, sonst direkt die Datei nehmen
+            const ri = found.remoteItem || found;
+            const rDriveId = (ri.parentReference && ri.parentReference.driveId) ? ri.parentReference.driveId : null;
+            const rId = ri.id;
+            // Alle möglichen Endpunkte versuchen
+            const eps = [];
+            if (rDriveId) eps.push(`https://graph.microsoft.com/v1.0/drives/${rDriveId}/items/${rId}/content`);
+            eps.push(`https://graph.microsoft.com/v1.0/me/drive/items/${rId}/content`);
+            eps.push(`https://graph.microsoft.com/v1.0/me/drive/items/${found.id}/content`);
+            let contentRes = null;
+            let usedDriveId = rDriveId;
+            let usedId = rId;
+            for (const ep of eps) {
+              const r = await fetch(ep, { headers: { Authorization: `Bearer ${accessToken}` } });
+              if (r.ok) { contentRes = r; if (ep.includes('/drives/')) { usedDriveId = rDriveId; usedId = rId; } break; }
+            }
+            if (contentRes && contentRes.ok) {
+                fileId = usedId;
+                fileName = 'Jahrestabelle 2026.xlsx';
+                window._driveId = usedDriveId;
                 document.getElementById('file-name-display').textContent = fileName;
                 const arrayBuffer = await contentRes.arrayBuffer();
                 const wb = XLSX.read(arrayBuffer, { type: 'array' });
