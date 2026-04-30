@@ -507,6 +507,7 @@ async function loadOneDriveFiles(folderId = null) {
         );
         if (sharedRes.ok) {
           const sharedJson = await sharedRes.json();
+          const _dbg = (sharedJson.value||[]).map(i=>i.name||'?').join(', ')||'(leer)'; loading.textContent = 'Geteilt: ' + _dbg;
           const found = (sharedJson.value || []).find(i =>
             i.name && i.name.toLowerCase().includes('jahrestabelle') ||
             (i.remoteItem && i.remoteItem.id && i.remoteItem.id.toLowerCase().includes(FILE_GUID.toLowerCase()))
