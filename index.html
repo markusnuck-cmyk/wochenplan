@@ -497,27 +497,29 @@ async function loadOneDriveFiles(folderId = null) {
       loading.textContent = 'Datei wird geladen…';
       loading.classList.add('visible');
 
-      // Zuerst Drive-ID von info's OneDrive ermitteln über Shares-API
-      const shareUrl = 'https://malermuellerag-my.sharepoint.com/:x:/g/personal/rechnungen_maler-mueller_ch/IQCVWf-MKYrSSLhh4kBZY1rZAQLJuspeFgtBFbI00CFzrZw?e=NNfMcm';
-      const encoded = btoa(shareUrl).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-      const shareRes = await fetch(`https://graph.microsoft.com/v1.0/shares/u!${encoded}/driveItem`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      // Direkt über bekannte Site und File-GUID von rechnungen@maler-mueller.ch laden
+      const FILE_GUID = '8CFF5995-8A29-48D2-B861-E24059635AD9';
+      const SITE_USER = 'rechnungen_maler-mueller_ch';
 
-      if (shareRes.ok) {
-        const shareJson = await shareRes.json();
-        const realDriveId = shareJson.parentReference ? shareJson.parentReference.driveId : null;
-        const realId = shareJson.id;
+      // Schritt 1: Drive-ID des Rechnungen-OneDrive ermitteln
+      try {
+        const siteRes = await fetch(
+          `https://graph.microsoft.com/v1.0/users/${SITE_USER.replace(/_/g,'.')}/drive`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        if (siteRes.ok) {
+          const siteJson = await siteRes.json();
+          const rechnDriveId = siteJson.id;
 
-        if (realDriveId && realId) {
-          const contentRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${realDriveId}/items/${realId}/content`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          });
-
+          // Schritt 2: Datei über GUID laden
+          const contentRes = await fetch(
+            `https://graph.microsoft.com/v1.0/drives/${rechnDriveId}/items/${FILE_GUID}/content`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
           if (contentRes.ok) {
-            fileId = realId;
-            fileName = shareJson.name || 'Jahrestabelle 2026.xlsx';
-            window._driveId = realDriveId;
+            fileId = FILE_GUID;
+            fileName = 'Jahrestabelle 2026.xlsx';
+            window._driveId = rechnDriveId;
             document.getElementById('file-name-display').textContent = fileName;
             const arrayBuffer = await contentRes.arrayBuffer();
             const wb = XLSX.read(arrayBuffer, { type: 'array' });
@@ -542,7 +544,7 @@ async function loadOneDriveFiles(folderId = null) {
             return;
           }
         }
-      }
+      } catch(e2) { /* weiter */ }
       loading.classList.remove('visible');
     } catch(e) { /* weiter */ }
 
