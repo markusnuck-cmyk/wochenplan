@@ -574,14 +574,16 @@ async function loadFile(id, name, driveId) {
   loading.classList.add('visible');
 
   try {
-    // Wenn driveId vorhanden (geteilte Datei), anderer Endpunkt
-    const endpoint = driveId
-      ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/content`
-      : `https://graph.microsoft.com/v1.0/me/drive/items/${id}/content`;
+    const endpoints = [];
+    if (driveId) endpoints.push(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/content`);
+    endpoints.push(`https://graph.microsoft.com/v1.0/me/drive/items/${id}/content`);
 
-    const res = await fetch(endpoint, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
+    let res = null;
+    for (const ep of endpoints) {
+      const r = await fetch(ep, { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (r.ok) { res = r; break; }
+    }
+    if (!res) throw new Error('Datei nicht zugänglich');
     const arrayBuffer = await res.arrayBuffer();
     const wb = XLSX.read(arrayBuffer, { type: 'array' });
 
