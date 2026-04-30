@@ -498,8 +498,44 @@ async function loadOneDriveFiles(folderId = null) {
       const shareRes = await graphGet(`/shares/u!${encoded}/driveItem`);
       if (shareRes && shareRes.id) {
         const driveId = shareRes.parentReference ? shareRes.parentReference.driveId : null;
-        await loadFile(shareRes.id, shareRes.name || 'Jahrestabelle 2026.xlsx', driveId);
-        return;
+        // Direkt Inhalt über drives/{driveId}/items/{id}/content laden
+        const contentUrl = driveId
+          ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${shareRes.id}/content`
+          : `https://graph.microsoft.com/v1.0/me/drive/items/${shareRes.id}/content`;
+        
+        const loading = document.getElementById('loading-overlay');
+        loading.textContent = 'Datei wird geladen…';
+        loading.classList.add('visible');
+        
+        const res = await fetch(contentUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
+        if (res.ok) {
+          fileId = shareRes.id;
+          fileName = shareRes.name || 'Jahrestabelle 2026.xlsx';
+          window._driveId = driveId;
+          document.getElementById('file-name-display').textContent = fileName;
+          const arrayBuffer = await res.arrayBuffer();
+          const wb = XLSX.read(arrayBuffer, { type: 'array' });
+          workbookData = {};
+          absenzData = {};
+          wb.SheetNames.forEach(sn => {
+            const ws = wb.Sheets[sn];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+            absenzData[sn] = (rows[1] && rows[1][0] !== undefined && rows[1][0] !== null) ? String(rows[1][0]) : '';
+            const entries = [];
+            for (let i = 4; i < rows.length; i++) {
+              const row = rows[i];
+              if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
+                entries.push({ nr: row[0], zeitraum: row[1] || '', auftrag: row[2] || '', mitarbeiter: row[3] || '' });
+              }
+            }
+            workbookData[sn] = entries;
+          });
+          window._rawWb = wb;
+          loading.classList.remove('visible');
+          showApp();
+          return;
+        }
+        loading.classList.remove('visible');
       }
     } catch(e) { /* weiter */ }
 
@@ -507,7 +543,7 @@ async function loadOneDriveFiles(folderId = null) {
     try {
       const search = await graphGet(`/me/drive/root/search(q='Jahrestabelle')?$top=10`);
       if (search && search.value) {
-        const found = search.value.find(i => i.file && i.name.toLowerCase().includes('jahrestabelle'));
+        const found = search.value.find(i => i.file && i.name.toLowerCase().includes('jahrestabelle') && !i.name.includes('.url'));
         if (found) {
           await loadFile(found.id, found.name, null);
           return;
