@@ -621,7 +621,11 @@ async function loadOneDriveFiles(folderId = null) {
           const ri = item.remoteItem || item;
           const rDriveId = (ri.parentReference && ri.parentReference.driveId) ? ri.parentReference.driveId : null;
           div.innerHTML = `<span class="file-icon">📊</span><div><div class="file-name">${item.name} <span style="color:#4caf50;font-size:11px;">✓ Geteilt</span></div><div class="file-modified">von Rechnungen</div></div>`;
-          div.onclick = () => loadFile(ri.id, 'Jahrestabelle 2026.xlsx', rDriveId);
+          div.onclick = async () => {
+            const dbgMsg = 'ri.id=' + ri.id + ' rDriveId=' + rDriveId + ' found.id=' + item.id;
+            document.querySelector('.file-card h2').textContent = dbgMsg;
+            await loadFile(ri.id, 'Jahrestabelle 2026.xlsx', rDriveId);
+          };
           list.appendChild(div);
         });
       }
