@@ -167,7 +167,14 @@
   </div>
 </div>
 <div id="header">
-  <div><h1 id="app-title">WOCHENPLAN<span class="subtitle">Maler Müller</span></h1></div>
+  <div style="display:flex;align-items:center;">
+    <h1 id="app-title">WOCHENPLAN<span class="subtitle">Maler Müller</span></h1>
+    <div id="year-switcher" style="display:flex;align-items:center;gap:6px;margin-left:18px;">
+      <button id="btn-year-prev" onclick="changeYear(-1)" title="Vorheriges Jahr" style="background:none;border:1px solid var(--blue-thin);color:#fff;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:13px;">◀</button>
+      <span id="year-display" style="color:#fff;font-weight:bold;font-size:13px;min-width:34px;text-align:center;"></span>
+      <button id="btn-year-next" onclick="changeYear(1)" title="Nächstes Jahr" style="background:none;border:1px solid var(--blue-thin);color:#fff;border-radius:3px;padding:2px 8px;cursor:pointer;font-size:13px;">▶</button>
+    </div>
+  </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <span id="user-info"></span>
     <button id="btn-login" onclick="handleLogin()">🔐 MIT MICROSOFT ANMELDEN</button>
@@ -200,7 +207,7 @@
     <h2>📁 OneDrive – Datei auswählen</h2>
     <button id="btn-refresh" onclick="loadOneDriveFiles()">↻ Aktualisieren</button>
     <div id="file-list"><div style="padding:20px;text-align:center;color:#bbb;">Wird geladen…</div></div>
-    <div style="margin-top:14px;font-size:12px;color:var(--muted);">Wähle die <strong>Jahrestabelle</strong> aus.</div>
+    <div id="file-hint" style="margin-top:14px;font-size:12px;color:var(--muted);">Wähle die <strong>Jahrestabelle</strong> aus.</div>
   </div>
 </div>
 <div id="app">
@@ -258,6 +265,7 @@ const REDIRECT_URI = 'https://markusnuck-cmyk.github.io/wochenplan/';
 const SCOPES = ['Files.ReadWrite', 'User.Read'];
 const TENANT_ID = '6eeab2a9-7b33-4cb8-bf1b-2ad52ff0f96c';
 const MITARBEITER = ['René','Joel','Zara','Josef','Karsten','Saskia','Fabiana','Beat','Boris','Urs','Sarah','Alex','Ronja','Adrian','Michele','Reto','Johanna','Karin','Claudio','Rahel'];
+const AVAILABLE_YEARS = [2026, 2027]; // Jahre mit hinterlegten Feiertagen/Ferien
 
 // ─── KALENDERDATEN ────────────────────────────────────────
 function buildKWMeta(year) {
@@ -374,6 +382,7 @@ window.onload = () => {
   clientId = localStorage.getItem('wp_client_id') || '';
 
   updateAppTitle();
+  updateYearDisplay();
 
   if (clientId && accessToken) { showFileScreen(); }
   else if (clientId) { showSetupDone(); }
@@ -383,6 +392,35 @@ window.onload = () => {
 function updateAppTitle() {
   document.getElementById('app-title').innerHTML = `WOCHENPLAN ${currentYear}<span class="subtitle">Maler Müller</span>`;
   document.title = `Wochenplan ${currentYear} – Maler Müller`;
+}
+
+function updateYearDisplay() {
+  const disp = document.getElementById('year-display');
+  if (disp) disp.textContent = currentYear;
+  const idx = AVAILABLE_YEARS.indexOf(currentYear);
+  const prevBtn = document.getElementById('btn-year-prev');
+  const nextBtn = document.getElementById('btn-year-next');
+  if (prevBtn) prevBtn.style.opacity = idx <= 0 ? '0.35' : '1';
+  if (nextBtn) nextBtn.style.opacity = (idx === -1 || idx >= AVAILABLE_YEARS.length - 1) ? '0.35' : '1';
+}
+
+function changeYear(delta) {
+  const idx = AVAILABLE_YEARS.indexOf(currentYear);
+  const newIdx = (idx === -1 ? 0 : idx) + delta;
+  if (newIdx < 0 || newIdx >= AVAILABLE_YEARS.length) return;
+  const newYear = AVAILABLE_YEARS[newIdx];
+  if (newYear === currentYear) return;
+  currentYear = newYear;
+  KW_META = buildKWMeta(currentYear);
+  selectedKW = getCurrentKWSheet();
+  workbookData = {}; absenzData = {}; fileId = null; fileName = null;
+  window._rawWb = null; window._driveId = null;
+  updateAppTitle();
+  updateYearDisplay();
+  showMsg(`Jahr gewechselt zu ${currentYear} – bitte die passende Jahrestabelle ${currentYear} auswählen.`, 'info');
+  if (accessToken && isTokenValid()) { showFileScreen(); }
+  else if (clientId) { showSetupDone(); }
+  else { showSetup(); }
 }
 
 function isTokenValid() {
@@ -409,6 +447,8 @@ function showFileScreen() {
   document.getElementById('app').classList.remove('visible');
   document.getElementById('btn-login').textContent = '✓ Angemeldet';
   document.getElementById('btn-login').classList.add('connected');
+  const hint = document.getElementById('file-hint');
+  if (hint) hint.innerHTML = `Wähle die <strong>Jahrestabelle ${currentYear}</strong> aus.`;
   loadOneDriveFiles();
 }
 function showApp() {
@@ -522,7 +562,8 @@ async function loadOneDriveFiles(folderId = null) {
       const sharedRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe?$top=50`, { headers: { Authorization: `Bearer ${accessToken}` } });
       if (sharedRes.ok) {
         const sharedJson = await sharedRes.json();
-        const found = (sharedJson.value || []).find(i => i.name && i.name.toLowerCase().includes('jahrestabelle') && i.name.toLowerCase().endsWith('.xlsx'));
+        const candidates = (sharedJson.value || []).filter(i => i.name && i.name.toLowerCase().includes('jahrestabelle') && i.name.toLowerCase().endsWith('.xlsx'));
+        const found = candidates.find(i => i.name.includes(String(currentYear))) || candidates.find(i => !AVAILABLE_YEARS.some(y => i.name.includes(String(y))));
         if (found) {
           const ri = found.remoteItem || found;
           const rDriveId = (ri.parentReference && ri.parentReference.driveId) ? ri.parentReference.driveId : null;
@@ -566,7 +607,8 @@ async function loadOneDriveFiles(folderId = null) {
     try {
       const search = await graphGet(`/me/drive/root/search(q='Jahrestabelle')?$top=20`);
       if (search && search.value) {
-        const found = search.value.find(i => i.file && i.name.toLowerCase().includes('jahrestabelle') && i.name.toLowerCase().endsWith('.xlsx'));
+        const candidates2 = search.value.filter(i => i.file && i.name.toLowerCase().includes('jahrestabelle') && i.name.toLowerCase().endsWith('.xlsx'));
+        const found = candidates2.find(i => i.name.includes(String(currentYear))) || candidates2.find(i => !AVAILABLE_YEARS.some(y => i.name.includes(String(y))));
         if (found) { await loadFile(found.id, found.name, null); return; }
         const folder = search.value.find(i => i.folder && i.name === 'Jahrestabellen');
         if (folder) folderId = folder.id;
