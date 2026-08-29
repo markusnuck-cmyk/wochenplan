@@ -333,10 +333,15 @@ let accessToken = null;
 let currentYear = new Date().getFullYear();
 let KW_META = buildKWMeta(currentYear);
 
-function getCurrentKWSheet() {
+function getCurrentKWIndex() {
   const now = new Date();
-  const kw = KW_META.find(k => now >= k.monday && now <= new Date(k.friday.getTime() + 86400000));
-  return kw ? kw.sheet : KW_META[0].sheet;
+  // volle Woche Montag 00:00 bis Sonntag 24:00 (= folgender Montag 00:00), damit auch Sa/So korrekt erkannt werden
+  const idx = KW_META.findIndex(k => now >= k.monday && now < new Date(k.monday.getTime() + 7 * 86400000));
+  return idx === -1 ? 0 : idx;
+}
+
+function getCurrentKWSheet() {
+  return KW_META[getCurrentKWIndex()].sheet;
 }
 
 let selectedKW = getCurrentKWSheet();
@@ -726,7 +731,10 @@ function checkMultiweek() {
 function buildSidebar() {
   const sb = document.getElementById('sidebar');
   sb.innerHTML = '';
-  KW_META.forEach(kw => {
+  // Liste ab der aktuellen Kalenderwoche beginnen, Rest hängt danach an (Rotation)
+  const startIdx = getCurrentKWIndex();
+  const ordered = [...KW_META.slice(startIdx), ...KW_META.slice(0, startIdx)];
+  ordered.forEach(kw => {
     const count = (workbookData[kw.sheet] || []).length;
     const div = document.createElement('div');
     div.className = 'kw-item' + (kw.sheet === selectedKW ? ' active' : '');
@@ -735,9 +743,7 @@ function buildSidebar() {
     div.onclick = () => { selectKW(kw.sheet); switchTab('view'); };
     sb.appendChild(div);
   });
-  // Aktuelle KW ganz oben anzeigen
-  const activeEl = document.getElementById('kw-' + selectedKW.replace(/\s/g,'_'));
-  if (activeEl) activeEl.scrollIntoView({ block: 'start' });
+  sb.scrollTop = 0;
 }
 
 function selectKW(sheet) {
