@@ -3,34 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wochenplan 2026 – Maler Müller</title>
+<title>Wochenplan – Maler Müller</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --blue: #2f5496;
-    --blue-light: #4472c4;
-    --blue-pale: #d9e2f3;
-    --blue-thin: #b4c6e7;
-    --gold: #c8a84b;
-    --bg: #f0ede8;
-    --white: #ffffff;
-    --border: #d0ccc4;
-    --text: #1a1a18;
-    --muted: #888;
+    --blue: #2f5496; --blue-light: #4472c4; --blue-pale: #d9e2f3;
+    --blue-thin: #b4c6e7; --gold: #c8a84b; --bg: #f0ede8;
+    --white: #ffffff; --border: #d0ccc4; --text: #1a1a18; --muted: #888;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
-  /* HEADER */
   #header { background: var(--blue); padding: 13px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
   #header h1 { color: #fff; font-size: 15px; font-weight: bold; letter-spacing: 1px; }
-  #header span { color: var(--blue-thin); font-size: 11px; margin-left: 14px; }
+  #header span.subtitle { color: var(--blue-thin); font-size: 11px; margin-left: 14px; }
   #btn-login { background: var(--gold); color: var(--text); border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
   #btn-login.connected { background: var(--blue-light); color: #fff; }
-#btn-logout { background: #c0392b; color: #fff; padding: 8px 14px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; border: none; margin-left: 6px; display: none; }
-  #user-info { color: var(--blue-thin); font-size: 11px; margin-right: 10px; }
-
-  /* SETUP SCREEN */
   #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; flex: 1; padding: 20px; overflow-y: auto; }
   .setup-card { background: #fff; border-radius: 6px; border: 1px solid var(--border); padding: 24px; max-width: 480px; width: 100%; margin: auto 0; }
   .setup-card h2 { color: var(--blue); font-size: 18px; margin-bottom: 8px; }
@@ -44,8 +31,6 @@
   #btn-connect { width: 100%; background: var(--blue); color: #fff; border: none; padding: 12px; border-radius: 3px; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 20px; }
   #btn-connect:hover { background: var(--blue-light); }
   .note { background: #fff8e8; border: 1px solid #e8d090; border-radius: 4px; padding: 12px 14px; font-size: 12px; color: #7a5a10; margin-top: 16px; line-height: 1.5; }
-
-  /* FILE PICKER */
   #file-screen { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; flex: 1; padding: 20px; overflow-y: auto; }
   .file-card { background: #fff; border-radius: 6px; border: 1px solid var(--border); padding: 24px; max-width: 520px; width: 100%; }
   .file-card h2 { color: var(--blue); font-size: 16px; margin-bottom: 16px; }
@@ -57,33 +42,22 @@
   .file-name { font-weight: 500; }
   .file-modified { color: var(--muted); font-size: 11px; margin-top: 2px; }
   #btn-refresh { background: none; border: 1px solid var(--border); padding: 7px 14px; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
-  #path-nav { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
-
-  /* MAIN APP */
   #app { display: none; flex: 1; overflow: hidden; flex-direction: column; }
   #app.visible { display: flex; }
   #app-inner { display: flex; flex: 1; overflow: hidden; padding-bottom: 60px; }
-
-  /* SIDEBAR */
   #sidebar { width: 100px; background: #fff; border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; padding-bottom: 60px; }
   .kw-item { padding: 8px 10px; cursor: pointer; border-left: 3px solid transparent; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #777; border-bottom: 1px solid var(--bg); }
   .kw-item.active { background: #eef2fb; border-left-color: var(--blue); color: var(--blue); font-weight: bold; }
   .kw-item:hover:not(.active) { background: var(--bg); }
   .kw-badge { background: var(--blue); color: #fff; border-radius: 8px; padding: 1px 5px; font-size: 10px; font-weight: bold; }
-
-  /* MAIN CONTENT */
   #main { flex: 1; overflow-y: auto; padding: 18px 22px; }
   #kw-header { padding-bottom: 12px; border-bottom: 2px solid var(--blue-pale); margin-bottom: 14px; }
   #kw-title { font-size: 17px; font-weight: bold; color: var(--blue); }
   #kw-datum { font-size: 13px; color: #777; margin-left: 12px; }
   #kw-info { margin-left: 12px; color: var(--gold); font-weight: bold; font-size: 12px; }
-
-  /* TABS */
   #tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
   .tab { background: none; border: none; padding: 6px 16px; cursor: pointer; color: #999; border-bottom: 2px solid transparent; font-size: 13px; font-family: inherit; margin-bottom: -1px; }
   .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: bold; }
-
-  /* TABLE */
   #entry-table { width: 100%; border-collapse: collapse; }
   #entry-table thead tr { background: var(--blue-light); }
   #entry-table th { color: #fff; padding: 7px 9px; font-weight: bold; font-size: 12px; text-align: left; }
@@ -99,11 +73,8 @@
   .btn-delete:hover { color: #e05050; }
   .btn-edit { background: none; border: none; color: #bbb; cursor: pointer; font-size: 12px; padding: 2px 4px; }
   .btn-edit:hover { color: var(--blue); }
-
   .empty-state { color: #bbb; padding: 28px 0; text-align: center; font-style: italic; }
   .empty-state a { color: var(--blue); cursor: pointer; text-decoration: underline; }
-
-  /* ABSENZ */
   #absenz-box { background: #fff8e8; border: 1px solid #e8d090; border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px; }
   #absenz-box label { font-size: 11px; font-weight: bold; color: #7a5a10; letter-spacing: 0.7px; white-space: nowrap; margin-top: 2px; }
   #absenz-text { flex: 1; font-size: 13px; color: #5a3e00; min-height: 18px; }
@@ -114,8 +85,6 @@
   #btn-absenz-edit:hover { color: #7a5a10; }
   #btn-absenz-save { background: var(--gold); color: var(--text); border: none; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 6px; }
   #btn-absenz-cancel { background: none; border: 1px solid var(--border); padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-left: 4px; }
-
-  /* FORM */
   #add-form { max-width: 500px; }
   .field { margin-bottom: 13px; }
   .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; font-weight: bold; letter-spacing: 0.7px; }
@@ -126,22 +95,15 @@
   .ma-btn.selected { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: bold; }
   #ma-preview { margin-top: 8px; font-size: 12px; color: var(--blue); font-weight: bold; min-height: 18px; }
   #btn-save-entry { background: var(--blue); color: #fff; border: none; padding: 10px 26px; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: bold; letter-spacing: 0.5px; margin-top: 4px; }
-
-  /* FOOTER */
   #footer { background: #fff; border-top: 1px solid var(--border); padding: 11px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 8px; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; }
   #footer-info { font-size: 13px; color: var(--muted); }
   #footer-info strong { color: var(--blue); }
   #btn-export { background: var(--gold); color: var(--text); border: none; padding: 10px 22px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
-  #btn-export:disabled { background: #e8e4de; color: #bbb; cursor: not-allowed; }
   #save-indicator { font-size: 11px; color: #6abf6a; margin-left: 12px; display: none; }
-
-  /* STATUS */
   #status { margin-top: 14px; padding: 9px 13px; border-radius: 4px; font-size: 13px; display: none; }
   #status.ok { background: #eef4ee; border: 1px solid #a8cfa8; color: #2d5a2d; }
   #status.error { background: #fdf0ee; border: 1px solid #e0a0a0; color: #8b2020; }
   #status.info { background: #eef2fb; border: 1px solid #a0b8e0; color: #1a3a6b; }
-
-  /* EDIT MODAL */
   #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
   #modal-overlay.visible { display: flex; }
   #modal { background: #fff; border-radius: 6px; padding: 24px; width: 480px; max-width: 90vw; }
@@ -149,16 +111,11 @@
   #modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
   .btn-cancel { background: none; border: 1px solid var(--border); padding: 8px 18px; border-radius: 3px; cursor: pointer; font-size: 13px; }
   .btn-confirm { background: var(--blue); color: #fff; border: none; padding: 8px 18px; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: bold; }
-
-  .loading { opacity: 0.6; pointer-events: none; }
   #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 200; align-items: center; justify-content: center; font-size: 15px; color: var(--blue); font-weight: bold; }
   #loading-overlay.visible { display: flex; }
-
-  /* DATEI WECHSELN BUTTON */
   #btn-change-file { background: none; border: 1px solid var(--border); padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 11px; color: var(--muted); }
   #btn-change-file:hover { border-color: var(--blue); color: var(--blue); }
-
-  /* PRINT */
+  .multiweek-badge { background: #e8f4e8; border: 1px solid #a8cfa8; color: #2d5a2d; border-radius: 3px; padding: 1px 5px; font-size: 10px; margin-left: 6px; }
   @media print {
     @page { size: A4 portrait; margin: 12mm 12mm 12mm 12mm; }
     body * { visibility: hidden; }
@@ -191,14 +148,8 @@
 </style>
 </head>
 <body>
-
-<!-- PRINT AREA -->
 <div id="print-area"></div>
-
-<!-- LOADING -->
 <div id="loading-overlay">Wird gespeichert…</div>
-
-<!-- EDIT MODAL -->
 <div id="modal-overlay">
   <div id="modal">
     <h3>Eintrag bearbeiten</h3>
@@ -215,44 +166,28 @@
     </div>
   </div>
 </div>
-
-<!-- HEADER -->
 <div id="header">
-  <div>
-    <h1>WOCHENPLAN 2026<span>Maler Müller</span></h1>
-  </div>
+  <div><h1 id="app-title">WOCHENPLAN<span class="subtitle">Maler Müller</span></h1></div>
   <div style="display:flex;align-items:center;gap:10px;">
     <span id="user-info"></span>
     <button id="btn-login" onclick="handleLogin()">🔐 MIT MICROSOFT ANMELDEN</button>
-    <button id="btn-logout" onclick="doLogout()" style="display:none;background:#c0392b;color:#fff;padding:8px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:bold;border:none;margin-left:6px;">↩ Abmelden</button>
   </div>
 </div>
-
-<!-- SETUP SCREEN -->
 <div id="setup-screen">
   <div class="setup-card">
     <h2>Einmalige Einrichtung</h2>
     <p>Um die App mit OneDrive zu verbinden, brauchst du eine Client-ID.</p>
     <div class="setup-step">
       <div class="step-num">1</div>
-      <div class="step-text">
-        <strong>Entra Portal öffnen</strong>
-        <span>Geh auf <strong>entra.microsoft.com</strong> und melde dich mit info@maler-mueller.ch an</span>
-      </div>
+      <div class="step-text"><strong>Entra Portal öffnen</strong><span>entra.microsoft.com → info@maler-mueller.ch</span></div>
     </div>
     <div class="setup-step">
       <div class="step-num">2</div>
-      <div class="step-text">
-        <strong>App registrieren</strong>
-        <span>Linkes Menü → <em>App-Registrierungen</em> → <em>Neue Registrierung</em><br>
-        Name: <strong>Wochenplan</strong> → Registrieren</span>
-      </div>
+      <div class="step-text"><strong>App registrieren</strong><span>App-Registrierungen → Neue Registrierung → Name: Wochenplan</span></div>
     </div>
     <div class="setup-step">
       <div class="step-num">3</div>
-      <div class="step-text">
-        <strong>Client-ID kopieren</strong>
-        <span>Die <em>Anwendungs-ID (Client)</em> hier eintragen:</span>
+      <div class="step-text"><strong>Client-ID eintragen</strong><span>Anwendungs-ID (Client) hier eintragen:</span>
         <input class="setup-input" id="client-id-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
       </div>
     </div>
@@ -260,19 +195,14 @@
     <div class="note">💡 Die Client-ID wird nur in deinem Browser gespeichert.</div>
   </div>
 </div>
-
-<!-- FILE PICKER -->
 <div id="file-screen" style="display:none;">
   <div class="file-card">
     <h2>📁 OneDrive – Datei auswählen</h2>
-    <div id="path-nav">OneDrive / </div>
     <button id="btn-refresh" onclick="loadOneDriveFiles()">↻ Aktualisieren</button>
     <div id="file-list"><div style="padding:20px;text-align:center;color:#bbb;">Wird geladen…</div></div>
-    <div style="margin-top:14px;font-size:12px;color:var(--muted);">Wähle die <strong>Jahrestabelle 2026.xlsx</strong> aus.</div>
+    <div style="margin-top:14px;font-size:12px;color:var(--muted);">Wähle die <strong>Jahrestabelle</strong> aus.</div>
   </div>
 </div>
-
-<!-- MAIN APP -->
 <div id="app">
   <div id="app-inner">
     <div id="sidebar"></div>
@@ -299,13 +229,14 @@
       <div id="tab-view"></div>
       <div id="tab-add" style="display:none;">
         <div id="add-form">
-          <div class="field"><label>ZEITRAUM *</label><input id="f-zeitraum" type="text" placeholder="z.B. 20.04 – 24.04  oder  ab 22.04"></div>
+          <div class="field"><label>ZEITRAUM *</label><input id="f-zeitraum" type="text" placeholder="z.B. 04.01 – 22.01  (mehrere Wochen möglich)"></div>
           <div class="field"><label>AUFTRAG / ADRESSE *</label><input id="f-auftrag" type="text" placeholder="z.B. Fam. Müller, Bahnhofstr. 12 – Küche streichen"></div>
           <div class="field">
             <label>MITARBEITER</label>
             <div id="mitarbeiter-grid"></div>
             <div id="ma-preview"></div>
           </div>
+          <div id="multiweek-info" style="display:none;margin-bottom:10px;padding:8px 12px;background:#eef4ee;border:1px solid #a8cfa8;border-radius:4px;font-size:12px;color:#2d5a2d;"></div>
           <button id="btn-save-entry" onclick="addEntry()">EINTRAG SPEICHERN</button>
         </div>
       </div>
@@ -313,10 +244,7 @@
     </div>
   </div>
   <div id="footer">
-    <div id="footer-info">
-      Bereit
-      <span id="save-indicator">✓ Gespeichert</span>
-    </div>
+    <div id="footer-info">Bereit<span id="save-indicator" style="display:none;color:#6abf6a;margin-left:12px;">✓ Gespeichert</span></div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span id="file-name-display" style="font-size:11px;color:var(--muted);"></span>
       <button id="btn-change-file" onclick="changeFile()">⇄ Datei wechseln</button>
@@ -325,71 +253,85 @@
     </div>
   </div>
 </div>
-
 <script>
-// ─── CONFIG ───────────────────────────────────────────────
 const REDIRECT_URI = 'https://markusnuck-cmyk.github.io/wochenplan/';
-const SCOPES = ['Files.ReadWrite', 'User.Read'];
-
+const SCOPES = ['Files.ReadWrite', 'User.Read', 'Sites.Read.All'];
+const TENANT_ID = '6eeab2a9-7b33-4cb8-bf1b-2ad52ff0f96c';
 const MITARBEITER = ['René','Joel','Zara','Josef','Karsten','Saskia','Fabiana','Beat','Boris','Urs','Sarah','Alex','Ronja','Adrian','Michele','Reto','Johanna','Karin','Claudio','Rahel'];
 
-const KW_META = [
-  {sheet:'Wochenplan',label:'KW 14',datum:'30.03 – 03.04.2026',info:'Karfreitag'},
-  {sheet:'Wochenplan KW 15',label:'KW 15',datum:'06.04 – 10.04.2026',info:'Ostermontag'},
-  {sheet:'Wochenplan KW 16',label:'KW 16',datum:'13.04 – 17.04.2026',info:''},
-  {sheet:'Wochenplan KW 17',label:'KW 17',datum:'20.04 – 24.04.2026',info:'Frühlingsferien'},
-  {sheet:'Wochenplan KW 18',label:'KW 18',datum:'27.04 – 01.05.2026',info:'1. Mai'},
-  {sheet:'Wochenplan KW 19',label:'KW 19',datum:'04.05 – 08.05.2026',info:''},
-  {sheet:'Wochenplan KW 20',label:'KW 20',datum:'11.05 – 15.05.2026',info:'Auffahrt'},
-  {sheet:'Wochenplan KW 21',label:'KW 21',datum:'18.05 – 22.05.2026',info:''},
-  {sheet:'Wochenplan KW 22',label:'KW 22',datum:'25.05 – 29.05.2026',info:'Pfingstmontag'},
-  {sheet:'Wochenplan KW 23',label:'KW 23',datum:'01.06 – 05.06.2026',info:''},
-  {sheet:'Wochenplan KW 24',label:'KW 24',datum:'08.06 – 12.06.2026',info:''},
-  {sheet:'Wochenplan KW 25',label:'KW 25',datum:'15.06 – 19.06.2026',info:''},
-  {sheet:'Wochenplan KW 26',label:'KW 26',datum:'22.06 – 26.06.2026',info:''},
-  {sheet:'Wochenplan KW 27',label:'KW 27',datum:'29.06 – 03.07.2026',info:''},
-  {sheet:'Wochenplan KW 28',label:'KW 28',datum:'06.07 – 10.07.2026',info:''},
-  {sheet:'Wochenplan KW 29',label:'KW 29',datum:'13.07 – 17.07.2026',info:'Sommerferien'},
-  {sheet:'Wochenplan KW 30',label:'KW 30',datum:'20.07 – 24.07.2026',info:'Sommerferien'},
-  {sheet:'Wochenplan KW 31',label:'KW 31',datum:'27.07 – 31.07.2026',info:'Sommerferien'},
-  {sheet:'Wochenplan KW 32',label:'KW 32',datum:'03.08 – 07.08.2026',info:'Sommerferien'},
-  {sheet:'Wochenplan KW 33',label:'KW 33',datum:'10.08 – 14.08.2026',info:'Sommerferien'},
-  {sheet:'Wochenplan KW 34',label:'KW 34',datum:'17.08 – 21.08.2026',info:''},
-  {sheet:'Wochenplan KW 35',label:'KW 35',datum:'24.08 – 28.08.2026',info:''},
-  {sheet:'Wochenplan KW 36',label:'KW 36',datum:'31.08 – 04.09.2026',info:''},
-  {sheet:'Wochenplan KW 37',label:'KW 37',datum:'07.09 – 11.09.2026',info:''},
-  {sheet:'Wochenplan KW 38',label:'KW 38',datum:'14.09 – 18.09.2026',info:''},
-  {sheet:'Wochenplan KW 39',label:'KW 39',datum:'21.09 – 25.09.2026',info:''},
-  {sheet:'Wochenplan KW 40',label:'KW 40',datum:'28.09 – 02.10.2026',info:''},
-  {sheet:'Wochenplan KW 41',label:'KW 41',datum:'05.10 – 09.10.2026',info:'Herbstferien'},
-  {sheet:'Wochenplan KW 42',label:'KW 42',datum:'12.10 – 16.10.2026',info:'Herbstferien'},
-  {sheet:'Wochenplan KW 43',label:'KW 43',datum:'19.10 – 23.10.2026',info:''},
-  {sheet:'Wochenplan KW 44',label:'KW 44',datum:'26.10 – 30.10.2026',info:''},
-  {sheet:'Wochenplan KW 45',label:'KW 45',datum:'02.11 – 06.11.2026',info:''},
-  {sheet:'Wochenplan KW 46',label:'KW 46',datum:'09.11 – 13.11.2026',info:''},
-  {sheet:'Wochenplan KW 47',label:'KW 47',datum:'16.11 – 20.11.2026',info:''},
-  {sheet:'Wochenplan KW 48',label:'KW 48',datum:'23.11 – 27.11.2026',info:''},
-  {sheet:'Wochenplan KW 49',label:'KW 49',datum:'30.11 – 04.12.2026',info:''},
-  {sheet:'Wochenplan KW 50',label:'KW 50',datum:'07.12 – 11.12.2026',info:''},
-  {sheet:'Wochenplan KW 51',label:'KW 51',datum:'14.12 – 18.12.2026',info:'Weihnachtsessen'},
-  {sheet:'Wochenplan KW 52',label:'KW 52',datum:'21.12 – 25.12.2026',info:'Weihnachtsferien'},
-];
+// ─── KALENDERDATEN ────────────────────────────────────────
+function buildKWMeta(year) {
+  const meta = [];
+  // Feiertage & Ferien Kanton Zürich
+  const ferien = {
+    2026: { sportferien:[6,7], fruehlingsferien:[16,17], sommerferien:[29,30,31,32,33], herbstferien:[41,42], weihnachtsessen:51, weihnachtsferien:52 },
+    2027: { sportferien:[2,3], fruehlingsferien:[14,15], sommerferien:[29,30,31,32,33], herbstferien:[41,42], weihnachtsessen:51, weihnachtsferien:52 },
+  };
+  const feiertage = {
+    2026: { 'Karfreitag': [3,26], 'Ostermontag': [3,30], 'Auffahrt': [5,14], 'Pfingstmontag': [5,25], '1. Mai': [5,1] },
+    2027: { 'Karfreitag': [3,26], 'Ostermontag': [3,29], 'Auffahrt': [5,6], 'Pfingstmontag': [5,17] },
+  };
+
+  function getISOWeek(date) {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() + 3 - (d.getDay()+6)%7);
+    const week1 = new Date(d.getFullYear(),0,4);
+    return 1 + Math.round(((d.getTime()-week1.getTime())/86400000 - 3 + (week1.getDay()+6)%7)/7);
+  }
+
+  function getMondayOfWeek(year, week) {
+    const jan4 = new Date(year,0,4);
+    const startW1 = new Date(jan4);
+    startW1.setDate(jan4.getDate() - (jan4.getDay()+6)%7);
+    const mon = new Date(startW1);
+    mon.setDate(startW1.getDate() + (week-1)*7);
+    return mon;
+  }
+
+  function fmt(d) { return d.getDate().toString().padStart(2,'0') + '.' + (d.getMonth()+1).toString().padStart(2,'0'); }
+
+  const f = ferien[year] || ferien[2027];
+  const ft = feiertage[year] || {};
+
+  const maxKW = getISOWeek(new Date(year,11,28)) >= 52 ? 52 : 52;
+
+  for (let kw = 1; kw <= maxKW; kw++) {
+    const mon = getMondayOfWeek(year, kw);
+    const fri = new Date(mon); fri.setDate(mon.getDate()+4);
+    const sheet = kw === 1 ? 'Wochenplan' : `Wochenplan KW ${kw}`;
+    const label = `KW ${kw}`;
+    const datum = `${fmt(mon)} – ${fmt(fri)}.${year}`;
+    let info = '';
+    if (f.sportferien && f.sportferien.includes(kw)) info = 'Sportferien';
+    else if (f.fruehlingsferien && f.fruehlingsferien.includes(kw)) info = 'Frühlingsferien';
+    else if (f.sommerferien && f.sommerferien.includes(kw)) info = 'Sommerferien';
+    else if (f.herbstferien && f.herbstferien.includes(kw)) info = 'Herbstferien';
+    else if (f.weihnachtsessen === kw) info = 'Weihnachtsessen';
+    else if (f.weihnachtsferien === kw) info = 'Weihnachtsferien';
+    if (!info) {
+      for (const [name, [m, d]] of Object.entries(ft)) {
+        const fdate = new Date(year, m-1, d);
+        if (fdate >= mon && fdate <= fri) { info = name; break; }
+      }
+    }
+    meta.push({ sheet, label, datum, info, monday: mon, friday: fri });
+  }
+  return meta;
+}
 
 // ─── STATE ────────────────────────────────────────────────
 let accessToken = null;
-function getCurrentKW() {
+let currentYear = new Date().getFullYear();
+let KW_META = buildKWMeta(currentYear);
+
+function getCurrentKWSheet() {
   const now = new Date();
-  const jan4 = new Date(now.getFullYear(), 0, 4);
-  const startOfWeek1 = new Date(jan4);
-  startOfWeek1.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
-  const diff = now - startOfWeek1;
-  const kw = Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
-  const sheet = 'Wochenplan KW ' + kw;
-  // Fallback auf erste verfügbare KW falls aktuelle nicht in Liste
-  const found = KW_META.find(k => k.sheet === sheet);
-  return found ? sheet : KW_META[0].sheet;
+  const kw = KW_META.find(k => now >= k.monday && now <= new Date(k.friday.getTime() + 86400000));
+  return kw ? kw.sheet : KW_META[0].sheet;
 }
-let selectedKW = getCurrentKW();
+
+let selectedKW = getCurrentKWSheet();
 let workbookData = {};
 let absenzData = {};
 let fileId = null;
@@ -399,6 +341,7 @@ let selectedMa = [];
 let editIdx = null;
 let editMa = [];
 let clientId = localStorage.getItem('wp_client_id') || '';
+let pendingSaveData = null; // für Token-Erneuerung
 
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
@@ -409,24 +352,43 @@ window.onload = () => {
   if (hash.includes('access_token')) {
     const params = new URLSearchParams(hash.substring(1));
     accessToken = params.get('access_token');
+    const expiresIn = parseInt(params.get('expires_in') || '3600');
     localStorage.setItem('wp_token', accessToken);
-    // Clear stored file so fresh pick happens after new login
-    localStorage.removeItem('wp_file_id');
-    localStorage.removeItem('wp_file_name');
+    localStorage.setItem('wp_token_expiry', Date.now() + expiresIn * 1000);
     window.history.replaceState({}, document.title, window.location.pathname);
+    // Nach Token-Erneuerung: gespeicherte Daten speichern
+    const savedData = sessionStorage.getItem('wp_pending_save');
+    if (savedData) {
+      sessionStorage.removeItem('wp_pending_save');
+      const pd = JSON.parse(savedData);
+      workbookData = pd.workbookData;
+      absenzData = pd.absenzData;
+      fileId = pd.fileId;
+      fileName = pd.fileName;
+      window._driveId = pd.driveId;
+      window._rawWb = null; // wb muss neu geladen werden
+    }
   }
 
   accessToken = accessToken || localStorage.getItem('wp_token');
   clientId = localStorage.getItem('wp_client_id') || '';
 
-  if (clientId && accessToken) {
-    showFileScreen();
-  } else if (clientId) {
-    showSetupDone();
-  } else {
-    showSetup();
-  }
+  updateAppTitle();
+
+  if (clientId && accessToken) { showFileScreen(); }
+  else if (clientId) { showSetupDone(); }
+  else { showSetup(); }
 };
+
+function updateAppTitle() {
+  document.getElementById('app-title').innerHTML = `WOCHENPLAN ${currentYear}<span class="subtitle">Maler Müller</span>`;
+  document.title = `Wochenplan ${currentYear} – Maler Müller`;
+}
+
+function isTokenValid() {
+  const expiry = parseInt(localStorage.getItem('wp_token_expiry') || '0');
+  return expiry > Date.now() + 60000; // 1 Min Puffer
+}
 
 // ─── SCREENS ──────────────────────────────────────────────
 function showSetup() {
@@ -435,33 +397,20 @@ function showSetup() {
   document.getElementById('app').classList.remove('visible');
   if (clientId) document.getElementById('client-id-input').value = clientId;
 }
-
 function showSetupDone() {
   document.getElementById('setup-screen').style.display = 'flex';
   document.getElementById('file-screen').style.display = 'none';
   document.getElementById('app').classList.remove('visible');
   document.getElementById('client-id-input').value = clientId;
 }
-
 function showFileScreen() {
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('file-screen').style.display = 'flex';
   document.getElementById('app').classList.remove('visible');
   document.getElementById('btn-login').textContent = '✓ Angemeldet';
   document.getElementById('btn-login').classList.add('connected');
-  document.getElementById('btn-logout').style.display = 'inline-block';
   loadOneDriveFiles();
 }
-
-function doLogout() {
-  localStorage.removeItem('wp_access_token');
-  localStorage.removeItem('wp_token_expiry');
-  accessToken = null;
-  localStorage.setItem('wp_force_select', '1');
-  const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
-  window.location.href = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' + redirectUri;
-}
-
 function showApp() {
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('file-screen').style.display = 'none';
@@ -469,14 +418,8 @@ function showApp() {
   buildSidebar();
   selectKW(selectedKW);
 }
-
 function changeFile() {
-  localStorage.removeItem('wp_file_id');
-  localStorage.removeItem('wp_file_name');
-  fileId = null;
-  fileName = null;
-  workbookData = {};
-  absenzData = {};
+  fileId = null; fileName = null; workbookData = {}; absenzData = {};
   showFileScreen();
 }
 
@@ -488,18 +431,24 @@ function saveClientId() {
   localStorage.setItem('wp_client_id', clientId);
   handleLogin();
 }
-
-function handleLogin() {
+function handleLogin(silent = false) {
   if (!clientId) { showSetup(); return; }
-  const TENANT_ID = '6eeab2a9-7b33-4cb8-bf1b-2ad52ff0f96c';
   const url = `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/authorize`
-    + `?client_id=${clientId}`
-    + `&response_type=token`
+    + `?client_id=${clientId}&response_type=token`
     + `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`
     + `&scope=${encodeURIComponent(SCOPES.join(' '))}`
     + `&response_mode=fragment`
-    + `&prompt=select_account`;
+    + (silent ? '&prompt=none' : '&prompt=select_account');
   window.location.href = url;
+}
+
+async function renewTokenAndSave() {
+  // Aktuelle Daten sichern
+  sessionStorage.setItem('wp_pending_save', JSON.stringify({
+    workbookData, absenzData, fileId, fileName, driveId: window._driveId
+  }));
+  showMsg('Token abgelaufen – bitte erneut anmelden. Daten werden danach automatisch gespeichert.', 'info');
+  setTimeout(() => handleLogin(false), 2000);
 }
 
 // ─── ONEDRIVE ─────────────────────────────────────────────
@@ -511,243 +460,29 @@ async function graphGet(url) {
   return res.json();
 }
 
-async function loadOneDriveFiles(folderId = null) {
-  const list = document.getElementById('file-list');
-  list.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb;">Wird geladen…</div>';
-
-  if (!folderId) {
-    // ── Direkt über bekannte Datei-ID und Drive laden ──
-    try {
-      const loading = document.getElementById('loading-overlay');
-      loading.textContent = 'Datei wird geladen…';
-      loading.classList.add('visible');
-
-      // Datei über sharedWithMe suchen (freigegebene Datei von rechnungen@maler-mueller.ch)
-      const FILE_GUID = '8CFF5995-8A29-48D2-B861-E24059635AD9';
-      try {
-        // Methode 1: sharedWithMe Liste durchsuchen
-        const sharedRes = await fetch(
-          `https://graph.microsoft.com/v1.0/me/drive/sharedWithMe?$top=50`,
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
-        if (sharedRes.ok) {
-          const sharedJson = await sharedRes.json();
-          const found = (sharedJson.value || []).find(i =>
-            i.name && i.name.toLowerCase().includes('jahrestabelle') && !i.name.includes('.url')
-          );
-          if (found) {
-            // remoteItem bevorzugen, sonst direkt die Datei nehmen
-            const ri = found.remoteItem || found;
-            const rDriveId = (ri.parentReference && ri.parentReference.driveId) ? ri.parentReference.driveId : null;
-            const rId = ri.id;
-            // Alle möglichen Endpunkte versuchen
-            const eps = [];
-            if (rDriveId) eps.push(`https://graph.microsoft.com/v1.0/drives/${rDriveId}/items/${rId}/content`);
-            eps.push(`https://graph.microsoft.com/v1.0/me/drive/items/${rId}/content`);
-            eps.push(`https://graph.microsoft.com/v1.0/me/drive/items/${found.id}/content`);
-            let contentRes = null;
-            let usedDriveId = rDriveId;
-            let usedId = rId;
-            for (const ep of eps) {
-              const r = await fetch(ep, { headers: { Authorization: `Bearer ${accessToken}` } });
-              if (r.ok) { contentRes = r; if (ep.includes('/drives/')) { usedDriveId = rDriveId; usedId = rId; } break; }
-            }
-            if (contentRes && contentRes.ok) {
-                fileId = usedId;
-                fileName = 'Jahrestabelle 2026.xlsx';
-                window._driveId = usedDriveId;
-                document.getElementById('file-name-display').textContent = fileName;
-                const arrayBuffer = await contentRes.arrayBuffer();
-                const wb = XLSX.read(arrayBuffer, { type: 'array' });
-                workbookData = {};
-                absenzData = {};
-                wb.SheetNames.forEach(sn => {
-                  const ws = wb.Sheets[sn];
-                  const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-                  absenzData[sn] = (rows[1] && rows[1][0] !== undefined && rows[1][0] !== null) ? String(rows[1][0]) : '';
-                  const entries = [];
-                  for (let i = 4; i < rows.length; i++) {
-                    const row = rows[i];
-                    if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
-                      entries.push({ nr: row[0], zeitraum: row[1] || '', auftrag: row[2] || '', mitarbeiter: row[3] || '' });
-                    }
-                  }
-                  workbookData[sn] = entries;
-                });
-                window._rawWb = wb;
-                loading.classList.remove('visible');
-                showApp();
-                return;
-            }
-          }
-        }
-      } catch(e2) { /* weiter */ }
-      loading.classList.remove('visible');
-    } catch(e) { /* weiter */ }
-
-    // ── Fallback: Im eigenen OneDrive suchen ──
-    try {
-      const search = await graphGet(`/me/drive/root/search(q='Jahrestabelle')?$top=10`);
-      if (search && search.value) {
-        // Echte xlsx suchen
-        const found = search.value.find(i => i.file && i.name.toLowerCase().includes('jahrestabelle') && i.name.toLowerCase().endsWith('.xlsx'));
-        if (found) {
-          await loadFile(found.id, found.name, null);
-          return;
-        }
-        // Verknüpfung (.url) suchen und remoteItem laden
-        const foundUrl = search.value.find(i => i.name && i.name.toLowerCase().includes('jahrestabelle') && i.name.includes('.url'));
-        if (foundUrl && foundUrl.remoteItem) {
-          const ri = foundUrl.remoteItem;
-          const rDriveId = ri.parentReference ? ri.parentReference.driveId : null;
-          await loadFile(ri.id, 'Jahrestabelle 2026.xlsx', rDriveId);
-          return;
-        }
-        const folder = search.value.find(i => i.folder && i.name === 'Jahrestabellen');
-        if (folder) folderId = folder.id;
-      }
-    } catch(e) { /* weiter */ }
-  }
-
-  // ── SCHRITT 3: Dateiliste anzeigen ──
-  const endpoint = folderId
-    ? `/me/drive/items/${folderId}/children`
-    : `/me/drive/root/children`;
-  const data = await graphGet(`${endpoint}?$top=100&$orderby=name`);
-  if (!data) return;
-
-  list.innerHTML = '';
-
-  if (folderId) {
-    const back = document.createElement('div');
-    back.className = 'file-item';
-    back.innerHTML = '<span class="file-icon">⬅</span><div><div class="file-name">.. Zurück</div></div>';
-    back.onclick = () => loadOneDriveFiles();
-    list.appendChild(back);
-  }
-
-  // Geteilte Jahrestabelle anzeigen (von Rechnungen)
-  if (!folderId) {
-    try {
-      const sharedRes = await fetch(
-        `https://graph.microsoft.com/v1.0/me/drive/sharedWithMe?$top=50`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      if (sharedRes.ok) {
-        const sharedJson = await sharedRes.json();
-        const sharedFiles = (sharedJson.value || []).filter(i =>
-          i.name && i.name.toLowerCase().includes('jahrestabelle') && !i.name.includes('.url')
-        );
-        sharedFiles.forEach(item => {
-          const div = document.createElement('div');
-          div.className = 'file-item';
-          div.style.background = '#eef4ee';
-          div.style.borderLeft = '3px solid #4caf50';
-          const ri = item.remoteItem || item;
-          const rDriveId = (ri.parentReference && ri.parentReference.driveId) ? ri.parentReference.driveId : null;
-          div.innerHTML = `<span class="file-icon">📊</span><div><div class="file-name">${item.name} <span style="color:#4caf50;font-size:11px;">✓ Geteilt</span></div><div class="file-modified">von Rechnungen</div></div>`;
-          div.onclick = async () => {
-            const loading2 = document.getElementById('loading-overlay');
-            loading2.textContent = 'Datei wird geladen…';
-            loading2.classList.add('visible');
-            try {
-              // Download-URL für öffentlichen Link (kein Login nötig)
-              const downloadUrl = 'https://malermuellerag-my.sharepoint.com/:x:/g/personal/rechnungen_maler-mueller_ch/IQCVWf-MKYrSSLhh4kBZY1rZAQLJuspeFgtBFbI00CFzrZw?e=QIWY1u&download=1';
-              const cr = await fetch(downloadUrl);
-              if (cr.ok) {
-                // Für Speichern brauchen wir noch die API-IDs – via shares holen
-                const encoded = btoa(downloadUrl.split('?')[0] + '?e=QIWY1u').replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
-                try {
-                  const sr = await fetch('https://graph.microsoft.com/v1.0/shares/u!' + encoded + '/driveItem', { headers: { Authorization: 'Bearer ' + accessToken } });
-                  if (sr.ok) { const sj = await sr.json(); fileId = sj.id; window._driveId = sj.parentReference ? sj.parentReference.driveId : null; }
-                } catch(e) {}
-                if (!fileId) { fileId = ri.id; window._driveId = rDriveId; }
-                fileName = 'Jahrestabelle 2026.xlsx';
-                document.getElementById('file-name-display').textContent = fileName;
-                const ab = await cr.arrayBuffer();
-                const wb = XLSX.read(ab, { type: 'array' });
-                workbookData = {}; absenzData = {};
-                wb.SheetNames.forEach(sn => {
-                  const ws = wb.Sheets[sn];
-                  const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-                  absenzData[sn] = (rows[1] && rows[1][0] !== undefined) ? String(rows[1][0]) : '';
-                  const entries = [];
-                  for (let i = 4; i < rows.length; i++) {
-                    const row = rows[i];
-                    if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
-                      entries.push({ nr: row[0], zeitraum: row[1]||'', auftrag: row[2]||'', mitarbeiter: row[3]||'' });
-                    }
-                  }
-                  workbookData[sn] = entries;
-                });
-                window._rawWb = wb;
-                loading2.classList.remove('visible');
-                showApp();
-                return;
-              }
-            } catch(ex) { /* weiter */ }
-            loading2.classList.remove('visible');
-            showMsg('Datei konnte nicht geladen werden.', 'error');
-          };
-          list.appendChild(div);
-        });
-      }
-    } catch(e) { /* ignorieren */ }
-  }
-
-  const items = (data.value || []).filter(i => !i.name || (!i.name.includes('.url') && !i.name.toLowerCase().includes('jahrestabelle')));
-  if (items.length === 0 && !folderId) {
-    // nichts weiter anzeigen
-  } else {
-    items.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'file-item';
-      const icon = item.folder ? '📁' : '📊';
-      const modified = item.lastModifiedDateTime ? new Date(item.lastModifiedDateTime).toLocaleDateString('de-CH') : '';
-      div.innerHTML = `<span class="file-icon">${icon}</span><div><div class="file-name">${item.name}</div><div class="file-modified">${modified}</div></div>`;
-      if (item.folder) {
-        div.onclick = () => loadOneDriveFiles(item.id);
-      } else {
-        div.onclick = () => loadFile(item.id, item.name, null);
-      }
-      list.appendChild(div);
-    });
-  }
-}
-
 async function loadFile(id, name, driveId) {
-  fileId = id;
-  fileName = name;
+  fileId = id; fileName = name;
   document.getElementById('file-name-display').textContent = name;
-
   const loading = document.getElementById('loading-overlay');
   loading.textContent = 'Datei wird geladen…';
   loading.classList.add('visible');
-
   try {
-    // Zuerst Item-Metadaten holen um echte Datei-ID zu finden (bei Verknüpfungen)
-    let realId = id;
-    let realDriveId = driveId;
+    let realId = id, realDriveId = driveId;
     try {
       const metaUrl = driveId
         ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}?$expand=remoteItem`
         : `https://graph.microsoft.com/v1.0/me/drive/items/${id}?$expand=remoteItem`;
       const meta = await fetch(metaUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
       if (meta.ok) {
-        const metaJson = await meta.json();
-        if (metaJson.remoteItem) {
-          realId = metaJson.remoteItem.id;
-          realDriveId = metaJson.remoteItem.parentReference ? metaJson.remoteItem.parentReference.driveId : null;
-        }
+        const mj = await meta.json();
+        if (mj.remoteItem) { realId = mj.remoteItem.id; realDriveId = mj.remoteItem.parentReference ? mj.remoteItem.parentReference.driveId : null; }
       }
-    } catch(e) { /* ignorieren */ }
-
+    } catch(e) {}
     const endpoints = [];
     if (realDriveId) endpoints.push(`https://graph.microsoft.com/v1.0/drives/${realDriveId}/items/${realId}/content`);
     endpoints.push(`https://graph.microsoft.com/v1.0/me/drive/items/${realId}/content`);
     if (driveId && driveId !== realDriveId) endpoints.push(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/content`);
     endpoints.push(`https://graph.microsoft.com/v1.0/me/drive/items/${id}/content`);
-
     let res = null;
     for (const ep of endpoints) {
       const r = await fetch(ep, { headers: { Authorization: `Bearer ${accessToken}` } });
@@ -756,9 +491,8 @@ async function loadFile(id, name, driveId) {
     if (!res) throw new Error('Datei nicht zugänglich');
     const arrayBuffer = await res.arrayBuffer();
     const wb = XLSX.read(arrayBuffer, { type: 'array' });
-
-    workbookData = {};
-    absenzData = {};
+    window._rawWb = wb;
+    workbookData = {}; absenzData = {};
     wb.SheetNames.forEach(sn => {
       const ws = wb.Sheets[sn];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -767,91 +501,183 @@ async function loadFile(id, name, driveId) {
       for (let i = 4; i < rows.length; i++) {
         const row = rows[i];
         if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
-          entries.push({
-            nr: row[0],
-            zeitraum: row[1] || '',
-            auftrag: row[2] || '',
-            mitarbeiter: row[3] || '',
-          });
+          entries.push({ nr: row[0], zeitraum: row[1]||'', auftrag: row[2]||'', mitarbeiter: row[3]||'' });
         }
       }
       workbookData[sn] = entries;
     });
-
-    window._rawWb = wb;
-    window._driveId = driveId; // merken für Speichern
     showApp();
-  } catch(e) {
-    showMsg('Fehler beim Laden der Datei: ' + e.message, 'error');
-  }
+  } catch(e) { showMsg('Fehler beim Laden: ' + e.message, 'error'); }
   loading.classList.remove('visible');
+}
+
+async function loadOneDriveFiles(folderId = null) {
+  const list = document.getElementById('file-list');
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb;">Wird geladen…</div>';
+  if (!folderId) {
+    try {
+      const loading = document.getElementById('loading-overlay');
+      loading.textContent = 'Datei wird geladen…';
+      loading.classList.add('visible');
+      const sharedRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe?$top=50`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (sharedRes.ok) {
+        const sharedJson = await sharedRes.json();
+        const found = (sharedJson.value || []).find(i => i.name && i.name.toLowerCase().includes('jahrestabelle') && i.name.toLowerCase().endsWith('.xlsx'));
+        if (found) {
+          const ri = found.remoteItem || found;
+          const rDriveId = (ri.parentReference && ri.parentReference.driveId) ? ri.parentReference.driveId : null;
+          const rId = ri.id;
+          const eps = [];
+          if (rDriveId) eps.push(`https://graph.microsoft.com/v1.0/drives/${rDriveId}/items/${rId}/content`);
+          eps.push(`https://graph.microsoft.com/v1.0/me/drive/items/${rId}/content`);
+          let contentRes = null;
+          for (const ep of eps) {
+            const r = await fetch(ep, { headers: { Authorization: `Bearer ${accessToken}` } });
+            if (r.ok) { contentRes = r; fileId = rId; window._driveId = rDriveId; break; }
+          }
+          if (contentRes) {
+            fileName = found.name;
+            document.getElementById('file-name-display').textContent = fileName;
+            const ab = await contentRes.arrayBuffer();
+            const wb = XLSX.read(ab, { type: 'array' });
+            window._rawWb = wb;
+            workbookData = {}; absenzData = {};
+            wb.SheetNames.forEach(sn => {
+              const ws = wb.Sheets[sn];
+              const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+              absenzData[sn] = (rows[1] && rows[1][0] !== undefined) ? String(rows[1][0]) : '';
+              const entries = [];
+              for (let i = 4; i < rows.length; i++) {
+                const row = rows[i];
+                if (row[0] !== undefined && row[0] !== null && row[0] !== '' && (row[1] || row[2] || row[3])) {
+                  entries.push({ nr: row[0], zeitraum: row[1]||'', auftrag: row[2]||'', mitarbeiter: row[3]||'' });
+                }
+              }
+              workbookData[sn] = entries;
+            });
+            loading.classList.remove('visible');
+            showApp();
+            return;
+          }
+        }
+      }
+      loading.classList.remove('visible');
+    } catch(e) { document.getElementById('loading-overlay').classList.remove('visible'); }
+    try {
+      const search = await graphGet(`/me/drive/root/search(q='Jahrestabelle')?$top=20`);
+      if (search && search.value) {
+        const found = search.value.find(i => i.file && i.name.toLowerCase().includes('jahrestabelle') && i.name.toLowerCase().endsWith('.xlsx'));
+        if (found) { await loadFile(found.id, found.name, null); return; }
+        const folder = search.value.find(i => i.folder && i.name === 'Jahrestabellen');
+        if (folder) folderId = folder.id;
+      }
+    } catch(e) {}
+  }
+  const endpoint = folderId ? `/me/drive/items/${folderId}/children` : `/me/drive/root/children`;
+  const data = await graphGet(`${endpoint}?$top=100&$orderby=name`);
+  if (!data) return;
+  list.innerHTML = '';
+  if (folderId) {
+    const back = document.createElement('div');
+    back.className = 'file-item';
+    back.innerHTML = '<span class="file-icon">⬅</span><div><div class="file-name">.. Zurück</div></div>';
+    back.onclick = () => loadOneDriveFiles();
+    list.appendChild(back);
+  }
+  const items = (data.value || []).filter(i => !i.name || !i.name.includes('.url'));
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'file-item';
+    const icon = item.folder ? '📁' : '📊';
+    const modified = item.lastModifiedDateTime ? new Date(item.lastModifiedDateTime).toLocaleDateString('de-CH') : '';
+    div.innerHTML = `<span class="file-icon">${icon}</span><div><div class="file-name">${item.name}</div><div class="file-modified">${modified}</div></div>`;
+    if (item.folder) { div.onclick = () => loadOneDriveFiles(item.id); }
+    else { div.onclick = () => loadFile(item.id, item.name, null); }
+    list.appendChild(div);
+  });
 }
 
 async function saveToOneDrive() {
   if (!fileId) return;
+  if (!isTokenValid()) { await renewTokenAndSave(); return; }
   const loading = document.getElementById('loading-overlay');
   loading.textContent = 'Wird auf OneDrive gespeichert…';
   loading.classList.add('visible');
-
   try {
     const wb = window._rawWb;
-
+    if (!wb) throw new Error('Workbook nicht geladen');
     KW_META.forEach(kw => {
       const sn = kw.sheet;
       if (!wb.SheetNames.includes(sn)) return;
       const entries = workbookData[sn] || [];
       const ws = wb.Sheets[sn];
       const ref = ws['!ref'] ? XLSX.utils.decode_range(ws['!ref']) : {s:{r:0,c:0},e:{r:4,c:3}};
-
       const absenz = absenzData[sn] || '';
-      ws[XLSX.utils.encode_cell({r:1, c:0})] = absenz ? {v: absenz, t:'s'} : {v:'', t:'s'};
+      ws[XLSX.utils.encode_cell({r:1,c:0})] = absenz ? {v:absenz,t:'s'} : {v:'',t:'s'};
       for (let r = 4; r <= ref.e.r; r++) {
-        for (let c = 0; c < 4; c++) {
-          delete ws[XLSX.utils.encode_cell({r, c})];
-        }
+        for (let c = 0; c < 4; c++) delete ws[XLSX.utils.encode_cell({r,c})];
       }
-
-      entries.forEach((e, i) => {
-        const r = i + 4;
-        ws[XLSX.utils.encode_cell({r, c:0})] = {v: i+1, t:'n'};
-        ws[XLSX.utils.encode_cell({r, c:1})] = {v: e.zeitraum, t:'s'};
-        ws[XLSX.utils.encode_cell({r, c:2})] = {v: e.auftrag, t:'s'};
-        ws[XLSX.utils.encode_cell({r, c:3})] = {v: e.mitarbeiter, t:'s'};
+      entries.forEach((e,i) => {
+        const r = i+4;
+        ws[XLSX.utils.encode_cell({r,c:0})] = {v:i+1,t:'n'};
+        ws[XLSX.utils.encode_cell({r,c:1})] = {v:e.zeitraum,t:'s'};
+        ws[XLSX.utils.encode_cell({r,c:2})] = {v:e.auftrag,t:'s'};
+        ws[XLSX.utils.encode_cell({r,c:3})] = {v:e.mitarbeiter,t:'s'};
       });
-
-      const newEnd = Math.max(4, entries.length + 3);
-      ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:newEnd,c:3}});
+      ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(4,entries.length+3),c:3}});
     });
-
     const wbOut = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([wbOut], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
     const driveId = window._driveId;
     const endpoint = driveId
       ? `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${fileId}/content`
       : `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`;
-
-    const res = await fetch(endpoint, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      },
-      body: blob
-    });
-
+    const res = await fetch(endpoint, { method: 'PUT', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }, body: blob });
+    if (res.status === 401) { loading.classList.remove('visible'); await renewTokenAndSave(); return; }
     if (res.ok) {
-      const ind = document.getElementById('save-indicator');
-      ind.style.display = 'inline';
-      setTimeout(() => ind.style.display = 'none', 3000);
+      document.getElementById('save-indicator').style.display = 'inline';
+      setTimeout(() => document.getElementById('save-indicator').style.display = 'none', 3000);
       showMsg('✓ Auf OneDrive gespeichert – ' + fileName, 'ok');
-    } else {
-      throw new Error('HTTP ' + res.status);
-    }
-  } catch(e) {
-    showMsg('Fehler beim Speichern: ' + e.message, 'error');
-  }
+    } else { throw new Error('HTTP ' + res.status); }
+  } catch(e) { showMsg('Fehler beim Speichern: ' + e.message, 'error'); }
   loading.classList.remove('visible');
+}
+
+// ─── MEHRWOCHEN-LOGIK ─────────────────────────────────────
+function parseZeitraum(zeitraum) {
+  // Erkennt "04.01 – 22.01" oder "04.01 - 22.01"
+  const match = zeitraum.match(/(\d{1,2})\.(\d{1,2})\s*[–-]\s*(\d{1,2})\.(\d{1,2})/);
+  if (!match) return null;
+  const year = currentYear;
+  const startDate = new Date(year, parseInt(match[2])-1, parseInt(match[1]));
+  const endDate = new Date(year, parseInt(match[4])-1, parseInt(match[3]));
+  if (isNaN(startDate) || isNaN(endDate)) return null;
+  return { startDate, endDate };
+}
+
+function getAffectedKWs(zeitraum) {
+  const parsed = parseZeitraum(zeitraum);
+  if (!parsed) return null;
+  const { startDate, endDate } = parsed;
+  if (endDate < startDate) return null;
+  const affected = KW_META.filter(kw => {
+    return kw.monday <= endDate && kw.friday >= startDate;
+  });
+  return affected.length > 1 ? affected : null;
+}
+
+// Zeitraum-Feld: Mehrwochen-Info anzeigen
+document.addEventListener('DOMContentLoaded', () => {});
+function checkMultiweek() {
+  const zt = document.getElementById('f-zeitraum').value.trim();
+  const infoEl = document.getElementById('multiweek-info');
+  const affected = getAffectedKWs(zt);
+  if (affected && affected.length > 1) {
+    infoEl.style.display = 'block';
+    infoEl.textContent = `↗ Dieser Eintrag wird in ${affected.length} Wochen eingetragen: ${affected.map(k=>k.label).join(', ')}`;
+  } else {
+    infoEl.style.display = 'none';
+  }
 }
 
 // ─── UI ───────────────────────────────────────────────────
@@ -867,20 +693,21 @@ function buildSidebar() {
     div.onclick = () => { selectKW(kw.sheet); switchTab('view'); };
     sb.appendChild(div);
   });
+  // Aktuelle KW ganz oben anzeigen
+  const activeEl = document.getElementById('kw-' + selectedKW.replace(/\s/g,'_'));
+  if (activeEl) activeEl.scrollIntoView({ block: 'start' });
 }
 
 function selectKW(sheet) {
   document.querySelectorAll('.kw-item').forEach(el => el.classList.remove('active'));
   const el = document.getElementById('kw-' + sheet.replace(/\s/g,'_'));
-  if (el) { el.classList.add('active'); el.scrollIntoView({block:'nearest'}); }
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest' }); }
   selectedKW = sheet;
   const meta = KW_META.find(k => k.sheet === sheet) || {};
   document.getElementById('kw-title').textContent = meta.label || '';
   document.getElementById('kw-datum').textContent = meta.datum || '';
   document.getElementById('kw-info').textContent = meta.info ? '· ' + meta.info : '';
-  renderView();
-  updateAbsenzBox();
-  updateFooter();
+  renderView(); updateAbsenzBox(); updateFooter();
 }
 
 function switchTab(tab) {
@@ -888,7 +715,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='view')||(i===1&&tab==='add')));
   document.getElementById('tab-view').style.display = tab === 'view' ? '' : 'none';
   document.getElementById('tab-add').style.display = tab === 'add' ? '' : 'none';
-  if (tab === 'add') { document.getElementById('f-zeitraum').focus(); }
+  if (tab === 'add') document.getElementById('f-zeitraum').focus();
 }
 
 function renderView() {
@@ -899,18 +726,10 @@ function renderView() {
     return;
   }
   let html = `<table id="entry-table"><thead><tr><th>Nr.</th><th>Zeitraum</th><th>Auftrag / Adresse</th><th>Mitarbeiter</th><th></th></tr></thead><tbody>`;
-  entries.forEach((e, i) => {
-    const cls = i % 2 === 0 ? 'odd' : 'even';
-    html += `<tr class="${cls}">
-      <td>${i+1}</td>
-      <td>${e.zeitraum || ''}</td>
-      <td>${e.auftrag || ''}</td>
-      <td>${e.mitarbeiter || ''}</td>
-      <td>
-        <button class="btn-edit" onclick="openEdit(${i})" title="Bearbeiten">✏</button>
-        <button class="btn-delete" onclick="deleteEntry(${i})" title="Löschen">✕</button>
-      </td>
-    </tr>`;
+  entries.forEach((e,i) => {
+    const cls = i%2===0 ? 'odd' : 'even';
+    const multiEl = e.multiweek ? `<span class="multiweek-badge">↗ ${e.multiweek}</span>` : '';
+    html += `<tr class="${cls}"><td>${i+1}</td><td>${e.zeitraum||''}</td><td>${e.auftrag||''}${multiEl}</td><td>${e.mitarbeiter||''}</td><td><button class="btn-edit" onclick="openEdit(${i})" title="Bearbeiten">✏</button><button class="btn-delete" onclick="deleteEntry(${i})" title="Löschen">✕</button></td></tr>`;
   });
   html += '</tbody></table>';
   div.innerHTML = html;
@@ -919,36 +738,28 @@ function renderView() {
 function updateFooter() {
   const total = Object.values(workbookData).flat().length;
   const kws = Object.keys(workbookData).filter(k => workbookData[k].length > 0).length;
-  document.getElementById('footer-info').innerHTML =
-    `<strong>${total}</strong> Einträge total · <strong>${kws}</strong> Wochen <span id="save-indicator" style="display:none;color:#6abf6a;margin-left:12px;">✓ Gespeichert</span>`;
+  document.getElementById('footer-info').innerHTML = `<strong>${total}</strong> Einträge total · <strong>${kws}</strong> Wochen <span id="save-indicator" style="display:none;color:#6abf6a;margin-left:12px;">✓ Gespeichert</span>`;
 }
 
-// ─── MITARBEITER GRID ─────────────────────────────────────
+// ─── MITARBEITER ──────────────────────────────────────────
 function buildMitarbeiterGrid() {
   const grid = document.getElementById('mitarbeiter-grid');
   MITARBEITER.forEach(m => {
     const btn = document.createElement('button');
-    btn.className = 'ma-btn';
-    btn.textContent = m;
+    btn.className = 'ma-btn'; btn.textContent = m;
     btn.onclick = () => toggleMa(m, btn);
     grid.appendChild(btn);
   });
 }
-
 function toggleMa(name, btn) {
-  if (selectedMa.includes(name)) {
-    selectedMa = selectedMa.filter(x => x !== name);
-    btn.classList.remove('selected');
-  } else {
-    selectedMa.push(name);
-    btn.classList.add('selected');
-  }
+  if (selectedMa.includes(name)) { selectedMa = selectedMa.filter(x=>x!==name); btn.classList.remove('selected'); }
+  else { selectedMa.push(name); btn.classList.add('selected'); }
   document.getElementById('ma-preview').textContent = selectedMa.length ? '→ ' + selectedMa.join(', ') : '';
 }
-
 function resetForm() {
   document.getElementById('f-zeitraum').value = '';
   document.getElementById('f-auftrag').value = '';
+  document.getElementById('multiweek-info').style.display = 'none';
   selectedMa = [];
   document.querySelectorAll('#mitarbeiter-grid .ma-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('ma-preview').textContent = '';
@@ -959,69 +770,69 @@ function addEntry() {
   const zt = document.getElementById('f-zeitraum').value.trim();
   const au = document.getElementById('f-auftrag').value.trim();
   if (!zt || !au) { showMsg('Zeitraum und Auftrag sind Pflichtfelder.', 'error'); return; }
-  if (!workbookData[selectedKW]) workbookData[selectedKW] = [];
-  workbookData[selectedKW].push({ zeitraum: zt, auftrag: au, mitarbeiter: selectedMa.join(', ') });
-  resetForm();
-  buildSidebar();
-  renderView();
-  switchTab('view');
-  updateFooter();
-  showMsg('✓ Eintrag hinzugefügt', 'ok');
+  const ma = selectedMa.join(', ');
+
+  // Mehrwochen prüfen
+  const affected = getAffectedKWs(zt);
+  if (affected && affected.length > 1) {
+    // In alle betroffenen KWs eintragen
+    affected.forEach((kw, idx) => {
+      if (!workbookData[kw.sheet]) workbookData[kw.sheet] = [];
+      workbookData[kw.sheet].push({
+        zeitraum: zt,
+        auftrag: au,
+        mitarbeiter: ma,
+        multiweek: `${idx+1}/${affected.length}`
+      });
+    });
+    resetForm(); buildSidebar(); renderView(); switchTab('view'); updateFooter();
+    showMsg(`✓ Eintrag in ${affected.length} Wochen eingetragen (${affected.map(k=>k.label).join(', ')})`, 'ok');
+  } else {
+    if (!workbookData[selectedKW]) workbookData[selectedKW] = [];
+    workbookData[selectedKW].push({ zeitraum: zt, auftrag: au, mitarbeiter: ma });
+    resetForm(); buildSidebar(); renderView(); switchTab('view'); updateFooter();
+    showMsg('✓ Eintrag hinzugefügt', 'ok');
+  }
 }
 
-function deleteEntry(idx) {
-  workbookData[selectedKW].splice(idx, 1);
-  buildSidebar();
-  renderView();
-  updateFooter();
-}
+function deleteEntry(idx) { workbookData[selectedKW].splice(idx, 1); buildSidebar(); renderView(); updateFooter(); }
 
 // ─── EDIT ─────────────────────────────────────────────────
 function buildEditMaGrid() {
   const grid = document.getElementById('edit-ma-grid');
   MITARBEITER.forEach(m => {
     const btn = document.createElement('button');
-    btn.className = 'ma-btn';
-    btn.textContent = m;
+    btn.className = 'ma-btn'; btn.textContent = m;
     btn.onclick = () => toggleEditMa(m, btn);
     grid.appendChild(btn);
   });
 }
-
 function toggleEditMa(name, btn) {
-  if (editMa.includes(name)) { editMa = editMa.filter(x => x !== name); btn.classList.remove('selected'); }
+  if (editMa.includes(name)) { editMa = editMa.filter(x=>x!==name); btn.classList.remove('selected'); }
   else { editMa.push(name); btn.classList.add('selected'); }
   document.getElementById('edit-ma-preview').textContent = editMa.length ? '→ ' + editMa.join(', ') : '';
 }
-
 function openEdit(idx) {
   const e = workbookData[selectedKW][idx];
   editIdx = idx;
   document.getElementById('edit-zeitraum').value = e.zeitraum || '';
   document.getElementById('edit-auftrag').value = e.auftrag || '';
   editMa = e.mitarbeiter ? e.mitarbeiter.split(', ').filter(Boolean) : [];
-  document.querySelectorAll('#edit-ma-grid .ma-btn').forEach(btn => {
-    btn.classList.toggle('selected', editMa.includes(btn.textContent));
-  });
+  document.querySelectorAll('#edit-ma-grid .ma-btn').forEach(btn => btn.classList.toggle('selected', editMa.includes(btn.textContent)));
   document.getElementById('edit-ma-preview').textContent = editMa.length ? '→ ' + editMa.join(', ') : '';
   document.getElementById('modal-overlay').classList.add('visible');
 }
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('visible');
-  editIdx = null;
-}
-
+function closeModal() { document.getElementById('modal-overlay').classList.remove('visible'); editIdx = null; }
 function saveEdit() {
   if (editIdx === null) return;
+  const existing = workbookData[selectedKW][editIdx];
   workbookData[selectedKW][editIdx] = {
     zeitraum: document.getElementById('edit-zeitraum').value.trim(),
     auftrag: document.getElementById('edit-auftrag').value.trim(),
     mitarbeiter: editMa.join(', '),
+    multiweek: existing.multiweek,
   };
-  closeModal();
-  renderView();
-  updateFooter();
+  closeModal(); renderView(); updateFooter();
   showMsg('✓ Eintrag aktualisiert', 'ok');
 }
 
@@ -1031,45 +842,13 @@ function printWeek() {
   const entries = workbookData[selectedKW] || [];
   const absenz = absenzData[selectedKW] || '';
   const now = new Date().toLocaleDateString('de-CH');
-
   let rows = '';
-  entries.forEach((e, i) => {
-    const cls = i % 2 === 0 ? 'p-odd' : 'p-even';
-    rows += `<tr class="${cls}">
-      <td>${i+1}</td>
-      <td>${e.zeitraum || ''}</td>
-      <td>${e.auftrag || ''}</td>
-      <td class="ma-cell">${e.mitarbeiter || ''}</td>
-    </tr>`;
+  entries.forEach((e,i) => {
+    const cls = i%2===0 ? 'p-odd' : 'p-even';
+    rows += `<tr class="${cls}"><td>${i+1}</td><td>${e.zeitraum||''}</td><td>${e.auftrag||''}</td><td class="ma-cell">${e.mitarbeiter||''}</td></tr>`;
   });
-
-  const absenzHtml = absenz
-    ? `<div class="print-absenz"><strong>⚠ ABSENZEN / FERIEN</strong> ${absenz}</div>`
-    : '';
-
-  document.getElementById('print-area').innerHTML = `
-    <div class="print-doc">
-      <div class="print-header-row">
-        <h1>WOCHENPLAN 2026 &nbsp;·&nbsp; Maler Müller</h1>
-        <span>Gedruckt: ${now}</span>
-      </div>
-      <div class="print-kw-row">
-        <strong>${meta.label || ''} &nbsp; ${meta.datum || ''}</strong>
-        <span>${meta.info || ''}</span>
-      </div>
-      ${absenzHtml}
-      <table class="print-table">
-        <thead><tr>
-          <th>Nr.</th>
-          <th>Zeitraum</th>
-          <th>Auftrag / Adresse</th>
-          <th>Mitarbeiter</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="print-footer">Wochenplan 2026 – Maler Müller AG</div>
-    </div>`;
-
+  const absenzHtml = absenz ? `<div class="print-absenz"><strong>⚠ ABSENZEN / FERIEN</strong> ${absenz}</div>` : '';
+  document.getElementById('print-area').innerHTML = `<div class="print-doc"><div class="print-header-row"><h1>WOCHENPLAN ${currentYear} &nbsp;·&nbsp; Maler Müller</h1><span>Gedruckt: ${now}</span></div><div class="print-kw-row"><strong>${meta.label||''} &nbsp; ${meta.datum||''}</strong><span>${meta.info||''}</span></div>${absenzHtml}<table class="print-table"><thead><tr><th>Nr.</th><th>Zeitraum</th><th>Auftrag / Adresse</th><th>Mitarbeiter</th></tr></thead><tbody>${rows}</tbody></table><div class="print-footer">Wochenplan ${currentYear} – Maler Müller AG</div></div>`;
   document.getElementById('print-area').style.display = 'block';
   window.print();
   document.getElementById('print-area').style.display = 'none';
@@ -1086,38 +865,31 @@ function updateAbsenzBox() {
   document.getElementById('absenz-text').style.display = '';
   document.getElementById('btn-absenz-edit').style.display = '';
 }
-
 function editAbsenz() {
-  const val = absenzData[selectedKW] || '';
-  document.getElementById('absenz-input').value = val;
+  document.getElementById('absenz-input').value = absenzData[selectedKW] || '';
   document.getElementById('absenz-text').style.display = 'none';
   document.getElementById('btn-absenz-edit').style.display = 'none';
   document.getElementById('absenz-edit-area').style.display = 'flex';
   document.getElementById('absenz-input').focus();
 }
-
-function saveAbsenz() {
-  absenzData[selectedKW] = document.getElementById('absenz-input').value.trim();
-  updateAbsenzBox();
-  showMsg('✓ Absenz gespeichert – nicht vergessen: auf OneDrive speichern!', 'ok');
-}
-
+function saveAbsenz() { absenzData[selectedKW] = document.getElementById('absenz-input').value.trim(); updateAbsenzBox(); showMsg('✓ Absenz gespeichert – nicht vergessen: auf OneDrive speichern!', 'ok'); }
 function cancelAbsenz() { updateAbsenzBox(); }
 
 // ─── HELPERS ──────────────────────────────────────────────
 function showMsg(msg, type) {
   const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = type;
-  el.style.display = 'block';
-  if (type !== 'error') setTimeout(() => el.style.display = 'none', 4000);
+  el.textContent = msg; el.className = type; el.style.display = 'block';
+  if (type !== 'error') setTimeout(() => el.style.display = 'none', 5000);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && activeTab === 'add') {
-    if (document.activeElement.id === 'f-auftrag') addEntry();
-  }
+  if (e.key === 'Enter' && activeTab === 'add' && document.activeElement.id === 'f-auftrag') addEntry();
   if (e.key === 'Escape') closeModal();
+});
+
+// Zeitraum-Feld: Live-Erkennung Mehrwochen
+document.addEventListener('input', e => {
+  if (e.target && e.target.id === 'f-zeitraum') checkMultiweek();
 });
 </script>
 </body>
